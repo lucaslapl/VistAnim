@@ -1,0 +1,148 @@
+@charset "UTF-8";
+/* ==========================================================================
+   🌿 SECTION HERO (Bandeau d'accueil)
+   ========================================================================== */
+.hero {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 40px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
+}
+.hero h1 {
+  color: #234e32;
+  font-size: 2.2rem;
+  margin: 0 0 10px 0;
+}
+.hero p {
+  color: #555;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* 🌿 TITRE DE SECTION */
+.section-title {
+  color: #234e32;
+  font-size: 1.6rem;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 10px;
+  margin-bottom: 25px;
+}
+
+/* 📭 MESSAGE : AUCUN ÉVÉNEMENT */
+.no-events {
+  font-style: italic;
+  color: #666;
+  text-align: center;
+  padding: 30px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px dashed #ccc;
+}
+
+/* ==========================================================================
+   🎛️ GRILLE DES CARTES (Responsive)
+   ========================================================================== */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+/* ==========================================================================
+   🃏 LA CARTE ÉVÉNEMENT (Event Card)
+   ========================================================================== */
+.event-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.08);
+}
+.event-card .event-card-header {
+  padding: 15px 20px 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  /* Badges Gratuit / Payant */
+}
+.event-card .event-card-header .badge {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+.event-card .event-card-header .badge-free {
+  background-color: #d4edda;
+  color: #155724;
+}
+.event-card .event-card-header .badge-paid {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.event-card .event-card-header {
+  /* Nom de l'asso */
+}
+.event-card .event-card-header .association-name {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+.event-card .event-card-body {
+  padding: 20px;
+  flex-grow: 1;
+}
+.event-card .event-card-body h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+.event-card .event-card-body {
+  /* Métadonnées (Date et Lieu) */
+}
+.event-card .event-card-body .event-meta {
+  font-size: 0.9rem;
+  color: #4a5568;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+.event-card .event-card-body .event-meta strong {
+  color: #333;
+}
+.event-card .event-card-body {
+  /* Extrait de la description */
+}
+.event-card .event-card-body .event-description {
+  font-size: 0.92rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+.event-card .event-card-footer {
+  padding: 0 20px 20px 20px;
+  /* On force le bouton à prendre toute la largeur de la carte */
+}
+.event-card .event-card-footer .btn-primary {
+  display: block;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+}/*# sourceMappingURL=agenda.css.map */

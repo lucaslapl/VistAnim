@@ -1,0 +1,520 @@
+@use 'theme';
+@use 'mixins';
+
+/* ── Admin Navigation ── */
+.admin-nav {
+    background-color: #1c3d27;
+    color: white;
+    padding: 12px 20px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+
+    @include mixins.respond-to(md) {
+        padding: 10px 14px;
+    }
+
+    .admin-nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .admin-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        @include mixins.respond-to(md) {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+    }
+
+    .admin-brand {
+        color: #2da44e;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .admin-nav-link {
+        color: white;
+        text-decoration: none;
+
+        &.muted {
+            color: #a3cfbb;
+            font-size: 0.9rem;
+        }
+    }
+
+    .admin-user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 0.9rem;
+
+        @include mixins.respond-to(sm) {
+            width: 100%;
+            justify-content: space-between;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+    }
+
+    .admin-user-badge {
+        background-color: rgba(255,255,255,0.1);
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .admin-user-role {
+        color: #ffc107;
+    }
+
+    .btn-logout {
+        background-color: theme.$danger-color;
+        color: white;
+        padding: 6px 12px;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 4px;
+        transition: background 0.2s;
+
+        &:hover {
+            background-color: #c82333;
+        }
+    }
+}
+
+/* ── Dashboard Layout ── */
+.admin-dashboard {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    @include mixins.respond-to(sm) {
+        padding: 0 12px;
+    }
+}
+
+.dashboard-header {
+    margin-bottom: 30px;
+    h1 {
+        margin: 0 0 4px;
+        font-size: 1.6rem;
+        color: theme.$text-dark;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.3rem;
+        }
+    }
+    p {
+        margin: 0;
+        color: #666;
+    }
+}
+
+/* ── Stats Cards ── */
+.stats-grid {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 35px;
+    flex-wrap: wrap;
+
+    @include mixins.respond-to(sm) {
+        gap: 12px;
+    }
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 180px;
+    background: white;
+    border-radius: 10px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-left: 4px solid theme.$primary-color;
+
+    @include mixins.respond-to(md) {
+        min-width: 160px;
+        padding: 16px 14px;
+    }
+
+    @include mixins.respond-to(sm) {
+        min-width: calc(50% - 12px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: theme.$text-dark;
+        line-height: 1.2;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.5rem;
+        }
+    }
+
+    .stat-label {
+        font-size: 0.82rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
+    &:nth-child(2) { border-left-color: #ffc107; }
+    &:nth-child(3) { border-left-color: #6f42c1; }
+    &:nth-child(4) { border-left-color: #17a2b8; }
+}
+
+/* ── Toolbar ── */
+.toolbar {
+    background: #f8f9fa;
+    padding: 16px 20px;
+    border-left: 4px solid theme.$secondary-color;
+    border-radius: 6px;
+    margin-bottom: 30px;
+
+    @include mixins.respond-to(sm) {
+        padding: 12px 14px;
+    }
+}
+
+/* ── Tables ── */
+.section-title {
+    margin: 30px 0 12px;
+    font-size: 1.15rem;
+    color: theme.$text-dark;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+
+    th {
+        background: #eef2f3;
+        text-align: left;
+        padding: 12px 14px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #555;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 12px 14px;
+        border-top: 1px solid #eee;
+        vertical-align: middle;
+
+        @include mixins.respond-to(sm) {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+    }
+
+    tbody tr:hover {
+        background-color: #f0f6fa;
+    }
+}
+
+/* ── Capacity text ── */
+.capacity-text {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+
+    &.full {
+        color: theme.$danger-color;
+    }
+}
+
+/* ── Action Links ── */
+.action-link {
+    text-decoration: none;
+    font-size: 0.88rem;
+    white-space: nowrap;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+/* ── Past events ── */
+.past-section {
+    .section-title {
+        color: #999;
+    }
+    .admin-table {
+        opacity: 0.6;
+    }
+}
+
+/* ── Other events (read-only) ── */
+.other-section {
+    margin-top: 50px;
+    .section-title {
+        color: #6c757d;
+    }
+    .admin-table {
+        th {
+            background: #f8f9fa;
+        }
+        tbody tr {
+            background: #fafafa;
+        }
+    }
+}
+
+/* ── Page Voir Inscrits ── */
+.inscrits-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+
+    @include mixins.respond-to(sm) {
+        padding: 0 12px;
+    }
+}
+
+.event-header {
+    margin-bottom: 25px;
+
+    h1 {
+        margin: 0 0 4px;
+        font-size: 1.6rem;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.3rem;
+        }
+    }
+
+    h2 {
+        margin: 0 0 16px;
+        font-size: 1.15rem;
+        font-weight: normal;
+        color: #555;
+    }
+
+    .event-title {
+        color: theme.$primary-color;
+        font-weight: bold;
+    }
+
+    .event-meta {
+        line-height: 1.8;
+        color: theme.$text-dark;
+
+        strong {
+            font-weight: 600;
+        }
+    }
+
+    .gauge {
+        font-weight: 700;
+
+        &.full {
+            color: theme.$danger-color;
+        }
+
+        &.available {
+            color: theme.$secondary-color;
+        }
+    }
+}
+
+.event-divider {
+    margin: 30px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+.empty-state {
+    font-style: italic;
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-left: 4px solid #6c757d;
+    border-radius: 4px;
+    color: #555;
+}
+
+.inscrits-table {
+    td {
+        vertical-align: middle;
+    }
+
+    .places-badge {
+        text-align: center;
+        font-weight: 700;
+        background: #f1f9f3;
+        border-radius: 4px;
+        padding: 4px 12px;
+        display: inline-block;
+    }
+
+    .date-cell {
+        font-size: 0.85rem;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+}
+
+.print-toolbar {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    @include mixins.respond-to(sm) {
+        flex-direction: column;
+        gap: 8px;
+
+        .btn-primary {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
+
+/* ── Admin Login Page ── */
+.login-page {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    @include mixins.respond-to(sm) {
+        margin: 30px auto;
+        padding: 16px;
+    }
+
+    h2 {
+        margin-top: 0;
+        font-size: 1.3rem;
+        color: theme.$text-dark;
+    }
+}
+
+.login-error {
+    color: theme.$danger-color;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.login-form {
+    .form-group {
+        margin-bottom: 15px;
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+
+        &:focus {
+            outline: none;
+            border-color: theme.$secondary-color;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+        }
+    }
+}
+
+.btn-login {
+    padding: 10px 15px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #218838;
+    }
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 15px;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+/* ── Print styles ── */
+@media print {
+    .admin-nav,
+    .print-toolbar,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .inscrits-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .admin-table {
+        border: 2px solid #000 !important;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+    }
+
+    .admin-table th {
+        background-color: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .admin-table tr:nth-child(6),
+    .admin-table td:nth-child(6) {
+        display: none !important;
+    }
+}

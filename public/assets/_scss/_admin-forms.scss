@@ -1,0 +1,225 @@
+@use 'theme';
+@use 'mixins';
+
+/* ── Page wrapper pour les formulaires admin ── */
+.admin-form-page {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 20px;
+
+    @include mixins.respond-to(sm) {
+        padding: 0 12px;
+    }
+
+    h1 {
+        color: theme.$primary-color;
+        font-size: 1.6rem;
+        margin: 0 0 24px;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.3rem;
+        }
+    }
+}
+
+/* ── Extension de .form-card pour les champs admin manquants ── */
+.form-card {
+    .form-group {
+
+        /* datetime-local, textarea, file, select */
+        input[type="datetime-local"],
+        input[type="file"],
+        textarea,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: theme.$text-dark;
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+
+            &:focus {
+                outline: none;
+                border-color: theme.$secondary-color;
+                background-color: #ffffff;
+                box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+            }
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Style du bouton "Parcourir" des file inputs */
+        input[type="file"] {
+            padding: 10px 12px;
+            font-size: .9rem;
+
+            @include mixins.respond-to(sm) {
+                font-size: 0.85rem;
+            }
+
+            &::file-selector-button {
+                background: theme.$secondary-color;
+                color: white;
+                border: none;
+                padding: 6px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 12px;
+                font-weight: 600;
+                transition: background 0.2s;
+
+                &:hover {
+                    background: #218838;
+                }
+            }
+        }
+    }
+
+    /* ── Ligne de date (avec bouton supprimer) ── */
+    .date-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 5px;
+
+        @include mixins.respond-to(sm) {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    .btn-remove-date {
+        background: theme.$danger-color;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 4px 10px;
+        font-size: 16px;
+        line-height: 1;
+        transition: background 0.2s;
+        flex-shrink: 0;
+
+        &:hover {
+            background: #c82333;
+        }
+    }
+
+    .btn-add-date {
+        margin-top: 8px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: background 0.2s;
+
+        &:hover {
+            background: #5a6268;
+        }
+    }
+
+    /* ── Pills de catégories ── */
+    .category-pill {
+        cursor: pointer;
+        background: #f8f9fa;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid #dee2e6;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        user-select: none;
+
+        &:hover {
+            background: #e9ecef;
+            border-color: theme.$secondary-color;
+        }
+
+        input[type="checkbox"] {
+            accent-color: theme.$secondary-color;
+        }
+    }
+
+    /* ── Sections à border (catégories, paiement, image) ── */
+    .form-section {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+
+        >label:first-child {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+    }
+
+    /* ── Bloc toggle (min participants, paiement) ── */
+    .toggle-group {
+        margin-bottom: 20px;
+
+        .toggle-label {
+            font-weight: 600;
+            cursor: pointer;
+            color: theme.$text-dark;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            input[type="checkbox"] {
+                accent-color: theme.$secondary-color;
+                width: 18px;
+                height: 18px;
+            }
+        }
+    }
+
+    .toggle-subsection {
+        padding-left: 24px;
+        border-left: 3px solid theme.$secondary-color;
+        margin-top: 12px;
+    }
+
+    /* ── Aperçu image ── */
+    .image-preview {
+        margin: 12px 0;
+
+        img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            object-fit: cover;
+        }
+    }
+
+    .remove-image-label {
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: theme.$danger-color;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ── Texte d'aide ── */
+    .form-help {
+        display: block;
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+}

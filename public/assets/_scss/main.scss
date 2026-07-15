@@ -1,0 +1,46 @@
+@use 'theme';
+@use 'package';
+@use 'mixins';
+@use 'header';
+@use 'main-content';
+@use 'anim-stats';
+@use 'admin';
+@use 'partners';
+@use 'agenda';
+@use 'detail-animation';
+@use 'formulaire-inscription';
+@use 'admin-forms';
+@use 'legal';
+@use 'footer';
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: theme.$text-dark;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+main {
+    min-height: 455px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+
+    @include mixins.respond-to(md) {
+        padding: 16px;
+    }
+
+    @include mixins.respond-to(sm) {
+        padding: 12px;
+    }
+}

@@ -1,0 +1,191 @@
+// assets/_scss/_formulaire-inscription.scss
+@use 'theme';
+@use 'mixins';
+
+/* ==========================================================================
+   🔙 BOUTON RETOUR
+   ========================================================================== */
+.btn-back {
+    display: inline-block;
+    color: theme.$primary-color;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 25px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: translateX(-4px);
+        text-decoration: underline;
+    }
+}
+
+/* ==========================================================================
+   📄 ZONE DE PAGE & RAPPEL DE L'ÉVÉNEMENT
+   ========================================================================== */
+.registration-form-page {
+    max-width: 600px; // On resserre la page pour que le formulaire ne soit pas trop large
+    margin: 0 auto 60px auto;
+
+    @include mixins.respond-to(sm) {
+        margin-bottom: 40px;
+    }
+
+    h1 {
+        color: theme.$primary-color;
+        font-size: 2rem;
+        margin: 0 0 10px 0;
+        text-align: center;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+        color: theme.$text-dark;
+        margin: 0 0 15px 0;
+        text-align: center;
+        border: none; // On enlève la bordure par défaut des h2 globaux
+        padding: 0;
+    }
+
+    .event-reminder {
+        background-color: theme.$bg-light;
+        border-radius: 6px;
+        padding: 15px;
+        text-align: center;
+        color: #555;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+    }
+}
+
+/* ==========================================================================
+   📦 LE FORMULAIRE (Form Card)
+   ========================================================================== */
+.form-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+
+    @include mixins.respond-to(sm) {
+        padding: 16px;
+    }
+
+    // --- BLOC DE GROUPE (Label + Input) ---
+    .form-group {
+        display: flex;
+        flex-direction: column; // Aligne le label au-dessus de l'input
+        gap: 8px;
+        margin-bottom: 20px;
+
+        label {
+            font-weight: 600;
+            color: theme.$text-dark;
+            font-size: 0.95rem;
+        }
+
+        /* Style unique pour tous les champs */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: theme.$text-dark;
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+
+            /* ✨ Effet quand l'utilisateur clique sur le champ */
+            &:focus {
+                outline: none;
+                border-color: theme.$secondary-color;
+                background-color: #ffffff;
+                box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15); // Halo lumineux vert discret
+            }
+        }
+
+        /* Petit texte d'aide sous le nombre de places */
+        .form-help {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+
+        .consent-group {
+            margin-bottom: 25px;
+            padding: 16px 20px;
+            background: #f0f7f1;
+            border: 1px solid #c8e6c9;
+            border-radius: 6px;
+            transition: background 0.2s ease, border-color 0.2s ease;
+
+            &:has(input:focus-visible) {
+                background: #e8f5e9;
+                border-color: theme.$secondary-color;
+                box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
+            }
+        }
+
+        .consent-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: theme.$text-dark;
+            line-height: 1.5;
+
+            input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                accent-color: theme.$secondary-color;
+                flex-shrink: 0;
+                margin: 0;
+                cursor: pointer;
+            }
+
+            a {
+                color: theme.$secondary-color;
+                text-decoration: underline;
+                font-weight: 600;
+
+                &:hover {
+                    color: #218838;
+                }
+            }
+        }
+    }
+
+
+    // --- BOUTON DE SOUMISSION ---
+    .btn-submit {
+        display: block;
+        width: 100%;
+        background-color: theme.$secondary-color;
+        color: white;
+        padding: 14px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+        margin-top: 10px;
+        box-shadow: 0 4px 6px rgba(40, 167, 69, 0.15);
+
+        &:hover {
+            background-color: #218838; // Vert un peu plus sombre
+        }
+
+        &:active {
+            transform: scale(0.98); // Effet de clic enfoncé
+        }
+    }
+}

@@ -1,0 +1,201 @@
+@use 'theme';
+@use 'mixins';
+
+.btn-back {
+    display: inline-block;
+    color: theme.$primary-color;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 25px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: translateX(-4px);
+        text-decoration: underline;
+    }
+}
+
+.event-detail {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    margin-bottom: 50px;
+
+    @include mixins.respond-to(md) {
+        padding: 20px;
+    }
+
+    @include mixins.respond-to(sm) {
+        padding: 14px;
+    }
+
+    h1 {
+        color: theme.$primary-color;
+        font-size: 2.2rem;
+        margin: 0 0 5px 0;
+        line-height: 1.3;
+
+        @include mixins.respond-to(md) {
+            font-size: 1.6rem;
+        }
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.3rem;
+        }
+    }
+
+    .organizer {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 30px;
+
+        strong {
+            color: theme.$text-dark;
+        }
+    }
+
+    .event-detail-image {
+        margin-bottom: 20px;
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+.event-infos {
+    background-color: theme.$bg-light;
+    border-left: 4px solid theme.$primary-color;
+    border-radius: 0 6px 6px 0;
+    padding: 20px;
+    margin-bottom: 35px;
+
+    @include mixins.respond-to(sm) {
+        padding: 14px;
+    }
+
+    p {
+        margin: 0 0 12px 0;
+        font-size: 1.05rem;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        @include mixins.respond-to(sm) {
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        strong {
+            color: theme.$text-dark;
+        }
+    }
+
+    .panel-warning {
+        background-color: #fffdf5;
+        border: 1px solid #ffeeba;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 15px;
+        color: #856404;
+
+        p {
+            margin: 5px 0 0 0;
+            font-size: 0.95rem;
+            color: #66511a;
+            display: block;
+        }
+    }
+}
+
+.event-description-full {
+    h3 {
+        color: theme.$primary-color;
+        font-size: 1.4rem;
+        margin: 0 0 15px 0;
+        border-bottom: 1px solid #edf2f7;
+        padding-bottom: 8px;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1.15rem;
+        }
+    }
+
+    p {
+        font-size: 1.05rem;
+        color: #333;
+        line-height: 1.8;
+        margin: 0;
+        white-space: pre-line;
+
+        @include mixins.respond-to(sm) {
+            font-size: 0.95rem;
+        }
+    }
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: #edf2f7;
+    margin: 40px 0;
+}
+
+.registration-link-section {
+    text-align: center;
+    background: #f7fafc;
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px dashed #e2e8f0;
+
+    @include mixins.respond-to(sm) {
+        padding: 20px 14px;
+    }
+
+    p {
+        font-size: 1.1rem;
+        margin: 0 0 15px 0;
+        color: #4a5568;
+
+        @include mixins.respond-to(sm) {
+            font-size: 1rem;
+        }
+    }
+
+    .btn-large {
+        display: inline-block;
+        font-size: 1.2rem;
+        padding: 14px 35px;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);
+        transition: all 0.2s ease;
+
+        @include mixins.respond-to(sm) {
+            padding: 12px 24px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        &:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+        }
+    }
+
+    .alert-danger {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+}

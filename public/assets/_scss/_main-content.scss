@@ -1,0 +1,108 @@
+@use 'theme';
+@use 'mixins';
+
+#main-content {
+    margin-bottom: 50px;
+
+    @include mixins.respond-to(md) {
+        flex-direction: column;
+    }
+
+    #intro {
+        padding: 25px;
+        width: 100%;
+        max-width: 600px;
+
+        @include mixins.respond-to(md) {
+            max-width: 100%;
+            padding: 20px 0;
+        }
+
+        h1 {
+            color: theme.$primary-color;
+            font-size: 2.2rem;
+            margin-top: 0;
+
+            @include mixins.respond-to(md) {
+                font-size: 1.6rem;
+            }
+
+            @include mixins.respond-to(sm) {
+                font-size: 1.4rem;
+            }
+        }
+
+        .intro-welcome {
+            font-size: 1.1rem;
+
+            @include mixins.respond-to(sm) {
+                font-size: 1rem;
+            }
+        }
+
+        p {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .btn-primary {
+            font-size: 1.1rem;
+            padding: 12px 25px;
+        }
+    }
+
+    #next-events {
+        background-color: theme.$bg-light;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        width: 100%;
+        max-width: 400px;
+
+        @include mixins.respond-to(md) {
+            max-width: 100%;
+        }
+
+        @include mixins.respond-to(sm) {
+            padding: 16px;
+        }
+
+        h2 {
+            color: theme.$primary-color;
+            margin-top: 0;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            font-size: 1.4rem;
+        }
+
+        .event-card {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            border-left: 4px solid theme.$secondary-color;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            text-decoration: none;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background-color: theme.$bg-light;
+            }
+
+            span {
+                font-size: 0.85rem;
+                font-weight: bold;
+                color: theme.$secondary-color;
+            }
+            h3 {
+                margin: 5px 0;
+                font-size: 1.1rem;
+                color: #222;
+            }
+            p {
+                margin: 0;
+                font-size: 0.9rem;
+                color: #666;
+            }
+        }
+    }
+}

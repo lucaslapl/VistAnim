@@ -1,0 +1,43 @@
+@use 'theme';
+@use 'mixins';
+
+#anim-stats {
+    background-color: theme.$bg-light;
+    padding: 40px 0;
+    margin-top: 20px;
+    text-align: center;
+
+    @include mixins.respond-to(sm) {
+        padding: 24px 0;
+    }
+
+    .stat-item {
+        span {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffc107;
+            line-height: 1;
+
+            @include mixins.respond-to(md) {
+                font-size: 2rem;
+            }
+
+            @include mixins.respond-to(sm) {
+                font-size: 1.6rem;
+            }
+        }
+        p {
+            color: #333;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            opacity: 0.9;
+
+            @include mixins.respond-to(sm) {
+                font-size: 0.8rem;
+                letter-spacing: 0.5px;
+            }
+        }
+    }
+}

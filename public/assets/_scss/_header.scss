@@ -1,0 +1,90 @@
+@use 'theme';
+@use 'mixins';
+
+.main-header {
+    background-color: theme.$primary-color;
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+
+    .tool-name {
+        font-size: 1.4rem;
+        font-weight: bold;
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        color: rgba(255, 255, 255, 0.5);
+
+        @include mixins.respond-to(md) {
+            display: none;
+        }
+    }
+
+    .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+
+        @include mixins.respond-to(md) {
+            flex-wrap: wrap;
+        }
+
+        .logo-link {
+            color: white;
+            text-decoration: none;
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+
+            @include mixins.respond-to(md) {
+                display: block;
+            }
+        }
+
+        .nav-menu {
+            @include mixins.respond-to(md) {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                padding: 15px 0 5px;
+
+                &.open {
+                    display: flex;
+                }
+            }
+
+            a {
+                color: white;
+                text-decoration: none;
+                margin-left: 20px;
+                font-weight: 500;
+
+                @include mixins.respond-to(md) {
+                    margin-left: 0;
+                    padding: 10px 0;
+                    border-top: 1px solid rgba(255, 255, 255, 0.15);
+                }
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+}

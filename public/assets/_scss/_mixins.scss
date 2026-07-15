@@ -1,0 +1,11 @@
+@use 'theme';
+
+@mixin respond-to($bp) {
+    @if $bp == sm {
+        @media (max-width: theme.$bp-sm) { @content; }
+    } @else if $bp == md {
+        @media (max-width: theme.$bp-md) { @content; }
+    } @else if $bp == lg {
+        @media (max-width: theme.$bp-lg) { @content; }
+    }
+}
