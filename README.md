@@ -107,4 +107,11 @@ composer test
 
 ## Licence
 
-Application développée sur la base du framework Laravel (licence [MIT](https://opensource.org/licenses/MIT)).
+**© 2026 lucaslapl — Tous droits réservés.**
+
+Ce dépôt est publié à des fins de **démonstration / portfolio uniquement**. Le code
+est consultable pour évaluation, mais toute utilisation, copie, modification,
+redistribution ou réutilisation (totale ou partielle) est **interdite sans
+autorisation écrite préalable**. Voir le fichier [LICENSE](LICENSE) pour les détails.
+
+> Le framework Laravel sur lequel repose l'application reste sous licence [MIT](https://opensource.org/licenses/MIT).
