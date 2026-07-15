@@ -6,6 +6,8 @@
     <title>@yield('title', 'Connexion') - {{ config('app.name') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/_css/main.css') }}">
     @stack('styles')
+
+    @include('includes.analytics')
 </head>
 <body>
     <main class="admin-dashboard">

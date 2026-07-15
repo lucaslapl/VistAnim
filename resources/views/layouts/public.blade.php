@@ -18,6 +18,8 @@
     <title>{{ isset($pageTitle) ? $pageTitle . ' | ' . config('app.name') : config('app.name') }}</title>
 
     <link rel="stylesheet" href="{{ asset('assets/_css/main.css') }}">
+
+    @include('includes.analytics')
 </head>
 <body>
 

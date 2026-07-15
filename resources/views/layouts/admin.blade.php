@@ -6,6 +6,8 @@
     <title>@yield('title', 'Administration') - {{ config('app.name') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/_css/main.css') }}">
     @stack('styles')
+
+    @include('includes.analytics')
 </head>
 <body>
     @include('includes.admin-nav')
