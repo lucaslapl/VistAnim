@@ -16,6 +16,8 @@ class SendReminders extends Command
     {
         $now = now();
 
+        // 1. Récapitulatif organisateur : une seule fois par événement,
+        //    dans la fenêtre 23 h 45 – 24 h 15 avant l'événement.
         $events = Event::with('registrations', 'organizer')
             ->where('reminder_sent', false)
             ->whereBetween('event_date', [
@@ -23,21 +25,10 @@ class SendReminders extends Command
                 $now->copy()->addHours(24)->addMinutes(15),
             ])->get();
 
-        if ($events->isEmpty()) {
-            $this->info('Aucun rappel à envoyer pour le moment.');
-            return self::SUCCESS;
-        }
-
         foreach ($events as $event) {
-            $this->line("  Traitement : {$event->title}");
+            $this->line("  Récapitulatif organisateur : {$event->title}");
 
             MailService::sendOrganizerReminder($event, $event->registrations);
-            $this->line("    ✓ Organisateur : {$event->organizer->email}");
-
-            foreach ($event->registrations as $reg) {
-                MailService::sendParticipantReminder($reg, $event);
-                $this->line("    ✓ Participant : {$reg->email}");
-            }
 
             $event->update([
                 'reminder_sent' => true,
@@ -45,7 +36,32 @@ class SendReminders extends Command
             ]);
         }
 
-        $this->info("✓ {$events->count()} événement(s) notifié(s).");
+        // 2. Rappels participants : suivis par inscription. Les inscriptions
+        //    créées après le récapitulatif reçoivent elles aussi leur rappel,
+        //    jusqu'au début de l'événement.
+        $participants = 0;
+
+        Event::with(['registrations' => function ($query) {
+            $query->where(function ($q) {
+                $q->whereNull('payment_status')->orWhereIn('payment_status', ['pending', 'paid']);
+            })->where('reminder_sent', false);
+        }])
+            ->whereBetween('event_date', [$now, $now->copy()->addHours(24)])
+            ->get()
+            ->each(function (Event $event) use (&$participants) {
+                foreach ($event->registrations as $registration) {
+                    MailService::sendParticipantReminder($registration, $event);
+                    $registration->update(['reminder_sent' => true]);
+                    $participants++;
+                }
+            });
+
+        if ($events->isEmpty() && $participants === 0) {
+            $this->info('Aucun rappel à envoyer pour le moment.');
+        } else {
+            $this->info("{$events->count()} récapitulatif(s) organisateur, {$participants} rappel(s) participant(s) envoyés.");
+        }
+
         return self::SUCCESS;
     }
 }

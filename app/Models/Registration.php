@@ -14,7 +14,7 @@ class Registration extends Model
     protected $fillable = [
         'event_id', 'firstname', 'lastname', 'email', 'phone',
         'nb_participants', 'token', 'consent', 'user_ip',
-        'payment_status', 'payment_intent_id',
+        'payment_status', 'payment_intent_id', 'reminder_sent',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class Registration extends Model
             'registered_at' => 'datetime',
             'consent' => 'boolean',
             'nb_participants' => 'integer',
+            'reminder_sent' => 'boolean',
         ];
     }
 
