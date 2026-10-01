@@ -128,10 +128,21 @@ Créer les deux tâches suivantes (fréquence : **toutes les minutes**) :
 /opt/plesk/php/8.4/bin/php /var/www/vhosts/votre-domaine.fr/httpdocs/artisan queue:work --stop-when-empty --max-time=55
 ```
 
-> Sans la tâche 2, **aucun email ne part** (les Mailables sont tous `ShouldQueue`).
+> Sans worker de queue, **aucun email ne part** (les Mailables sont tous `ShouldQueue`).
 > Si le plan d'hébergement interdit les crons à la minute, passer
 > `QUEUE_CONNECTION=sync` dans `.env` en dernier recours (emails envoyés dans
 > la requête HTTP, plus lent pour l'utilisateur).
+
+> **Deux options pour le worker — en choisir UNE seule :**
+>
+> 1. **Laravel Toolkit** (recommandé) : le paquet `plesk/ext-laravel-integration`
+>    (épinglé `^8.0` dans composer.json) permet d'activer le toggle
+>    *Queues* du Toolkit. Le worker `default` (notre seule file) est alors
+>    géré par Plesk — inutile de créer la tâche cron 2.
+> 2. **Cron** : la tâche 2 ci-dessus, sans dépendre du Toolkit.
+>
+> Dans les deux cas, la tâche 1 (scheduler) reste **obligatoire** : le worker
+> ne déclenche pas les tâches planifiées (rappels J-1).
 
 ## 8. Webhook Stripe
 
@@ -208,7 +219,7 @@ remboursement, queue, webhooks Stripe).
 - [ ] Document root sur `httpdocs/public`
 - [ ] `php artisan migrate --force` exécuté
 - [ ] Cron scheduler toutes les minutes
-- [ ] Cron queue worker toutes les minutes
+- [ ] Worker de queue actif (toggle Queues du Laravel Toolkit **ou** cron `queue:work`)
 - [ ] Webhook Stripe configuré + `STRIPE_WEBHOOK_SECRET`
 - [ ] `php artisan optimize` exécuté (à refaire après chaque modif de `.env`)
 - [ ] `https://votre-domaine.fr/up` renvoie 200
@@ -226,6 +237,7 @@ remboursement, queue, webhooks Stripe).
    ```bash
    /opt/plesk/php/8.4/bin/php artisan down            # maintenance (optionnel)
    /opt/plesk/php/8.4/bin/php artisan migrate --force
+   /opt/plesk/php/8.4/bin/php artisan queue:restart  # le worker recharge le nouveau code
    /opt/plesk/php/8.4/bin/php artisan optimize
    /opt/plesk/php/8.4/bin/php artisan up
    ```
