@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AdminLog;
 use App\Models\EventDraft;
 use Illuminate\Support\Facades\Auth;
 

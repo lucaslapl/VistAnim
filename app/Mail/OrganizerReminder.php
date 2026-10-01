@@ -23,7 +23,7 @@ class OrganizerReminder extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Rappel J-1 : récap des inscrits pour "' . $this->event->title . '"',
+            subject: 'Rappel J-1 : récap des inscrits pour "'.$this->event->title.'"',
         );
     }
 

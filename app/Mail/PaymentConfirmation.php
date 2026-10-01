@@ -30,14 +30,14 @@ class PaymentConfirmation extends Mailable implements ShouldQueue
     public function content(): Content
     {
         $pricePerPerson = $this->event->price_amount
-            ? number_format((float)$this->event->price_amount, 2, ',', ' ') . ' €'
+            ? number_format((float) $this->event->price_amount, 2, ',', ' ').' €'
             : '0,00 €';
 
         $total = $this->event->price_amount
-            ? number_format((float)$this->event->price_amount * (int)$this->registration->nb_participants, 2, ',', ' ') . ' €'
+            ? number_format((float) $this->event->price_amount * (int) $this->registration->nb_participants, 2, ',', ' ').' €'
             : 'Gratuit';
 
-        $invoiceNumber = 'FACT-' . date('Y') . '-' . str_pad((string)$this->registration->id, 4, '0', STR_PAD_LEFT);
+        $invoiceNumber = 'FACT-'.date('Y').'-'.str_pad((string) $this->registration->id, 4, '0', STR_PAD_LEFT);
 
         return new Content(
             view: 'emails.payment-confirmation',

@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
@@ -34,13 +33,13 @@ class AdminUserController extends Controller
         ]);
 
         // Validation mot de passe : majuscule + minuscule + chiffre
-        if (!preg_match('/[A-Z]/', $request->input('password'))) {
+        if (! preg_match('/[A-Z]/', $request->input('password'))) {
             return back()->withErrors(['password' => 'Le mot de passe doit contenir au moins une majuscule.'])->withInput();
         }
-        if (!preg_match('/[a-z]/', $request->input('password'))) {
+        if (! preg_match('/[a-z]/', $request->input('password'))) {
             return back()->withErrors(['password' => 'Le mot de passe doit contenir au moins une minuscule.'])->withInput();
         }
-        if (!preg_match('/[0-9]/', $request->input('password'))) {
+        if (! preg_match('/[0-9]/', $request->input('password'))) {
             return back()->withErrors(['password' => 'Le mot de passe doit contenir au moins un chiffre.'])->withInput();
         }
 
@@ -54,7 +53,7 @@ class AdminUserController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Création structure',
-            'details' => 'Création de l\'utilisateur : ' . $request->input('email'),
+            'details' => 'Création de l\'utilisateur : '.$request->input('email'),
             'ip_address' => request()->ip(),
         ]);
 
@@ -77,7 +76,7 @@ class AdminUserController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Suppression structure',
-            'details' => 'Suppression de l\'utilisateur : ' . $email,
+            'details' => 'Suppression de l\'utilisateur : '.$email,
             'ip_address' => request()->ip(),
         ]);
 

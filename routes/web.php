@@ -1,14 +1,14 @@
 <?php
 
-use App\Http\Controllers\PublicEventController;
-use App\Http\Controllers\PublicRegistrationController;
-use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DraftController;
+use App\Http\Controllers\PaiementController;
+use App\Http\Controllers\PublicEventController;
+use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -76,4 +76,3 @@ Route::middleware(['auth', 'role:admin,organisateur'])->prefix('admin')->name('a
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
     ->middleware('throttle:60,1')
     ->name('stripe.webhook');
-

@@ -16,17 +16,19 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $key = 'login:' . $request->ip();
+        $key = 'login:'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
+
             return back()->withErrors([
-                'email' => 'Trop de tentatives. Réessayez dans ' . ceil($seconds / 60) . ' minutes.',
+                'email' => 'Trop de tentatives. Réessayez dans '.ceil($seconds / 60).' minutes.',
             ])->onlyInput('email');
         }
 
-        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             RateLimiter::hit($key, 900);
+
             return back()->withErrors([
                 'email' => 'Email ou mot de passe incorrect.',
             ])->onlyInput('email');
@@ -38,7 +40,7 @@ class AuthController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Connexion',
-            'details' => 'Connexion depuis ' . $request->ip(),
+            'details' => 'Connexion depuis '.$request->ip(),
             'ip_address' => $request->ip(),
         ]);
 
@@ -50,7 +52,7 @@ class AuthController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Déconnexion',
-            'details' => 'Déconnexion depuis ' . $request->ip(),
+            'details' => 'Déconnexion depuis '.$request->ip(),
             'ip_address' => $request->ip(),
         ]);
 

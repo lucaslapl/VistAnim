@@ -18,23 +18,24 @@ class StripeService
         if (self::$client === null) {
             self::$client = new StripeClient(config('stripe.secret_key'));
         }
+
         return self::$client;
     }
 
     public static function createCheckoutSession(Event $event, Registration $reg, string $successUrl, string $cancelUrl, array $extraMetadata = []): Session
     {
-        $unitAmount = (int)(round((float)$event->price_amount, 2) * 100);
-        $quantity = (int)$reg->nb_participants;
+        $unitAmount = (int) (round((float) $event->price_amount, 2) * 100);
+        $quantity = (int) $reg->nb_participants;
 
         $session = self::client()->checkout->sessions->create([
             'mode' => 'payment',
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
             'customer_email' => $reg->email,
-            'client_reference_id' => (string)$reg->id,
+            'client_reference_id' => (string) $reg->id,
             'metadata' => array_merge([
-                'registration_id' => (string)$reg->id,
-                'event_id' => (string)$event->id,
+                'registration_id' => (string) $reg->id,
+                'event_id' => (string) $event->id,
                 'token' => $reg->token,
             ], $extraMetadata),
             'line_items' => [[
@@ -42,7 +43,7 @@ class StripeService
                     'currency' => 'eur',
                     'product_data' => [
                         'name' => $event->title,
-                        'description' => 'Inscription pour ' . $quantity . ' personne(s)',
+                        'description' => 'Inscription pour '.$quantity.' personne(s)',
                     ],
                     'unit_amount' => $unitAmount,
                 ],
@@ -69,12 +70,14 @@ class StripeService
         if ($amountCents !== null) {
             $params['amount'] = $amountCents;
         }
+
         return self::client()->refunds->create($params);
     }
 
     public static function calculateRefundAmount(float $pricePerPerson, int $oldNb, int $newNb): int
     {
         $diff = $oldNb - $newNb;
-        return (int)(round($diff * $pricePerPerson, 2) * 100);
+
+        return (int) (round($diff * $pricePerPerson, 2) * 100);
     }
 }

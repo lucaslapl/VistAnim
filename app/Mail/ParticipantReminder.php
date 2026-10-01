@@ -23,7 +23,7 @@ class ParticipantReminder extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Rappel : demain c\'est l\'Animation "' . $this->event->title . '" !',
+            subject: 'Rappel : demain c\'est l\'Animation "'.$this->event->title.'" !',
         );
     }
 

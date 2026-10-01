@@ -15,7 +15,7 @@ class PublicEventController extends Controller
         $stats = [
             'coming_count' => Event::future()->count(),
             'past_events' => Event::past()->count(),
-            'past_participants' => Registration::whereHas('event', fn($q) => $q->past())->sum('nb_participants'),
+            'past_participants' => Registration::whereHas('event', fn ($q) => $q->past())->sum('nb_participants'),
             'structures' => User::count(),
         ];
 

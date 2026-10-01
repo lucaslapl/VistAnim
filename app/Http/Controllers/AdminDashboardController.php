@@ -37,7 +37,7 @@ class AdminDashboardController extends Controller
 
         $stats = [
             'upcoming' => Event::future()->count(),
-            'participants' => Registration::whereHas('event', fn($q) => $q->future())->sum('nb_participants'),
+            'participants' => Registration::whereHas('event', fn ($q) => $q->future())->sum('nb_participants'),
             'structures' => User::count(),
             'past' => Event::past()->count(),
         ];

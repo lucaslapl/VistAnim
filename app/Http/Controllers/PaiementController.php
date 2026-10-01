@@ -16,12 +16,12 @@ class PaiementController extends Controller
         $registration = Registration::where('token', $request->query('token'))->first();
         $event = $registration?->event;
 
-        if (!$registration || !$event) {
+        if (! $registration || ! $event) {
             return redirect()->route('accueil');
         }
 
         // Déjà payé ou gratuit → confirmation
-        if ($registration->payment_status === 'paid' || !$event->is_paid) {
+        if ($registration->payment_status === 'paid' || ! $event->is_paid) {
             return redirect()->route('confirmation', ['token' => $registration->token]);
         }
 
@@ -38,7 +38,7 @@ class PaiementController extends Controller
     {
         $registration = Registration::where('token', $request->query('token'))->first();
 
-        if (!$registration) {
+        if (! $registration) {
             return response()->json(['status' => 'not_found'], 404);
         }
 
@@ -66,7 +66,7 @@ class PaiementController extends Controller
                     $status = 'cancel';
                 }
             } catch (\Exception $e) {
-                Log::error('Erreur vérification paiement Stripe: ' . $e->getMessage());
+                Log::error('Erreur vérification paiement Stripe: '.$e->getMessage());
                 $error = 'Erreur de vérification du paiement.';
             }
         } elseif ($request->has('cancel')) {
@@ -98,7 +98,7 @@ class PaiementController extends Controller
 
             return redirect()->away($session->url);
         } catch (\Exception $e) {
-            Log::error('Erreur création session Stripe: ' . $e->getMessage());
+            Log::error('Erreur création session Stripe: '.$e->getMessage());
 
             return view('public.paiement', [
                 'status' => 'error',

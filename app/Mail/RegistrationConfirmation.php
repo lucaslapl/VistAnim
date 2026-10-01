@@ -32,9 +32,9 @@ class RegistrationConfirmation extends Mailable implements ShouldQueue
         $total = '';
         if ($this->event->is_paid && $this->event->price_amount) {
             $total = number_format(
-                (float)$this->event->price_amount * (int)$this->registration->nb_participants,
+                (float) $this->event->price_amount * (int) $this->registration->nb_participants,
                 2, ',', ' '
-            ) . ' €';
+            ).' €';
         }
 
         return new Content(
