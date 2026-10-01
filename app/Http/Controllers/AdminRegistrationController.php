@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateAdminRegistrationRequest;
 use App\Models\AdminLog;
 use App\Models\Event;
 use App\Models\Registration;
@@ -45,7 +46,7 @@ class AdminRegistrationController extends Controller
         return view('admin.modifier-inscrit', compact('event', 'registration'));
     }
 
-    public function update(Request $request, int $eventId, int $registrationId)
+    public function update(UpdateAdminRegistrationRequest $request, int $eventId, int $registrationId)
     {
         $event = Event::findOrFail($eventId);
         $registration = Registration::where('event_id', $event->id)->findOrFail($registrationId);
@@ -55,14 +56,6 @@ class AdminRegistrationController extends Controller
         if ($request->query('action') === 'supprimer') {
             return $this->delete($registration, $event);
         }
-
-        $request->validate([
-            'firstname' => 'required|string|max:100',
-            'lastname' => 'required|string|max:100',
-            'email' => 'required|email',
-            'phone' => 'nullable|string|max:20',
-            'nb_participants' => 'required|integer|min:1',
-        ]);
 
         $oldNb = $registration->nb_participants;
         $newNb = $request->integer('nb_participants');

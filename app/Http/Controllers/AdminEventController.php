@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\AdminLog;
 use App\Models\Category;
 use App\Models\Event;
@@ -24,38 +26,8 @@ class AdminEventController extends Controller
         return view('admin.creer-evenement', compact('categories', 'draftData', 'draftId'));
     }
 
-    public function store(Request $request)
+    public function store(StoreEventRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'event_dates' => 'required|array|min:1',
-            'event_dates.*' => 'date|after_or_equal:today',
-            'location' => 'nullable|string|max:200',
-            'rdv_point' => 'nullable|string|max:200',
-            'event_duration' => 'nullable|string|max:100',
-            'audience_type' => 'nullable|string|max:100',
-            'max_participants' => 'nullable|integer|min:1',
-            'min_participants' => 'nullable|integer|min:0',
-            'is_paid' => 'boolean',
-            'price_details' => 'nullable|string',
-            'price_amount' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'categories' => 'nullable|array',
-            'categories.*' => 'exists:categories,id',
-        ]);
-
-        if ($request->filled('min_participants') && $request->filled('max_participants')
-            && $request->integer('min_participants') > $request->integer('max_participants')) {
-            return back()->withErrors(['min_participants' => 'Le minimum ne peut pas dépasser le maximum.'])
-                ->withInput();
-        }
-
-        if ($request->boolean('is_paid') && $request->float('price_amount') <= 0) {
-            return back()->withErrors(['price_amount' => 'Le montant doit être supérieur à 0 pour un événement payant.'])
-                ->withInput();
-        }
-
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $this->uploadImage($request->file('image'));
@@ -117,30 +89,11 @@ class AdminEventController extends Controller
         return view('admin.modifier-evenement', compact('event', 'categories'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateEventRequest $request, int $id)
     {
         $event = Event::findOrFail($id);
 
         $this->authorize('manage', $event);
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'event_date' => 'required|date|after_or_equal:today',
-            'location' => 'nullable|string|max:200',
-            'rdv_point' => 'nullable|string|max:200',
-            'event_duration' => 'nullable|string|max:100',
-            'audience_type' => 'nullable|string|max:100',
-            'max_participants' => 'nullable|integer|min:1',
-            'min_participants' => 'nullable|integer|min:0',
-            'is_paid' => 'boolean',
-            'price_details' => 'nullable|string',
-            'price_amount' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'categories' => 'nullable|array',
-            'categories.*' => 'exists:categories,id',
-            'remove_image' => 'boolean',
-        ]);
 
         // La capacité ne peut pas descendre sous les places déjà réservées.
         if ($request->filled('max_participants') && $request->integer('max_participants') < $event->reserved_places) {

@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PublicRegistrationRequest;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Services\MailService;
+use App\Services\RegistrationService;
 use App\Services\StripeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class PublicRegistrationController extends Controller
 {
+    public function __construct(
+        private readonly RegistrationService $registrations,
+    ) {}
+
     public function afficherFormulaire(int $id)
     {
         $event = Event::with('organizer', 'categories')->findOrFail($id);
@@ -35,7 +39,7 @@ class PublicRegistrationController extends Controller
         return view('public.formulaire-inscription', compact('event'));
     }
 
-    public function traiterInscription(Request $request, int $id)
+    public function traiterInscription(PublicRegistrationRequest $request, int $id)
     {
         if (! $request->isMethod('post')) {
             abort(405);
@@ -46,16 +50,6 @@ class PublicRegistrationController extends Controller
         if ($event->event_date->isPast()) {
             return redirect()->route('agenda')->with('error', 'Cet événement n\'est plus disponible.');
         }
-
-        // Validation
-        $request->validate([
-            'firstname' => 'required|string|max:100',
-            'lastname' => 'required|string|max:100',
-            'email' => 'required|email',
-            'phone' => 'nullable|string|max:20',
-            'nb_participants' => 'required|integer|min:1',
-            'consent' => 'accepted',
-        ]);
 
         // Honeypot
         if ($request->filled('website')) {
@@ -80,49 +74,10 @@ class PublicRegistrationController extends Controller
             ])->withInput();
         }
 
-        $registration = null;
-        $duplicate = false;
+        // Création sous verrou (doublon + capacité) — voir RegistrationService.
+        $registration = $this->registrations->inscrire($event, $request->validated(), $request->ip());
 
-        DB::transaction(function () use ($request, $event, $id, &$registration, &$duplicate) {
-            // Verrouillage ligne : sérialise les inscriptions concurrentes
-            // sur le même événement (verrou pessimiste).
-            Event::where('id', $id)->lockForUpdate()->first();
-
-            // Vérification doublon email — sous le verrou : une double
-            // soumission concurrente ne peut plus passer deux fois.
-            $duplicate = Registration::where('event_id', $id)
-                ->where('email', $request->input('email'))
-                ->exists();
-
-            if ($duplicate) {
-                return;
-            }
-
-            // Vérification places restantes
-            $reserved = $event->fresh()->reserved_places;
-            $requestedPlaces = $request->integer('nb_participants');
-
-            if ($event->max_participants !== null && ($reserved + $requestedPlaces) > $event->max_participants) {
-                throw ValidationException::withMessages([
-                    'nb_participants' => 'Il n\'y a plus assez de places disponibles.',
-                ]);
-            }
-
-            $registration = Registration::create([
-                'event_id' => $id,
-                'firstname' => $request->input('firstname'),
-                'lastname' => $request->input('lastname'),
-                'email' => $request->input('email'),
-                'phone' => $request->input('phone'),
-                'nb_participants' => $requestedPlaces,
-                'token' => Str::random(64),
-                'consent' => true,
-                'user_ip' => $request->ip(),
-                'payment_status' => $event->is_paid ? 'pending' : null,
-            ]);
-        });
-
-        if ($duplicate) {
+        if ($registration === null) {
             return redirect()->route('ticket.recuperer', ['event_id' => $id])
                 ->with('info', 'Vous êtes déjà inscrit à cet événement.');
         }
