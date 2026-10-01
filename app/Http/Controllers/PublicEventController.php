@@ -24,7 +24,10 @@ class PublicEventController extends Controller
 
     public function agenda()
     {
-        $events = Event::future()->with('organizer', 'categories')->orderBy('event_date')->get();
+        $events = Event::future()
+            ->with('organizer', 'categories')
+            ->orderBy('event_date')
+            ->paginate(12);
 
         return view('public.agenda', compact('events'));
     }

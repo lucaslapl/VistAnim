@@ -50,6 +50,8 @@
                 </article>
             @endforeach
         </div>
+
+        {{ $events->links() }}
     @endif
 </main>
 @endsection
