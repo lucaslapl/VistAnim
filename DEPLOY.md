@@ -173,7 +173,35 @@ public/assets/images/animations/ → inscriptible (upload des images d'événeme
 > L'application n'utilise pas `storage:link` : les images uploadées vont
 > directement dans `public/assets/images/animations/`.
 
-## 11. Checklist de mise en production
+## 11. Sauvegardes et logs
+
+### Sauvegarde de la base (quotidienne)
+
+Sur un mutualisé, créer une **tâche planifiée Plesk** (fréquence : quotidienne, ex. 3 h du matin) :
+
+```bash
+mkdir -p /var/www/vhosts/votre-domaine.fr/private/backups
+/opt/plesk/php/8.4/bin/php -r 'exit(0);' # vérifier le binaire PHP, puis :
+mysqldump --host=127.0.0.1 --user=<user> --password=<motdepasse> <base> \
+  | gzip > /var/www/vhosts/votre-domaine.fr/private/backups/db-$(date +\%F).sql.gz
+find /var/www/vhosts/votre-domaine.fr/private/backups -name 'db-*.sql.gz' -mtime +30 -delete
+```
+
+> Le répertoire `private/` n'est **pas** accessible par HTTP. Conserver au moins 30 jours.
+> Si l'offre inclut les sauvegardes automatiques Plesk, vérifier leur fréquence et
+> la rétention dans Plesk > Tools & Settings > Backup Manager — la tâche ci-dessus
+> reste utile pour un export hors de l'hébergement.
+
+### Rotation des logs applicatifs
+
+Le `.env` de production utilise `LOG_STACK=daily` : un fichier `laravel-YYYY-MM-DD.log`
+par jour, rétention de 14 jours (`LOG_DAILY_DAYS`). Sans cela, `laravel.log` croît
+indéfiniment sur un mutualisé sans accès à logrotate.
+
+À surveiller après mise en production : `storage/logs/laravel-*.log` (erreurs
+remboursement, queue, webhooks Stripe).
+
+## 12. Checklist de mise en production
 
 - [ ] `docker compose exec app php artisan test` vert en local (sqlite **et** mysql)
 - [ ] `.env` : `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` en https
@@ -189,7 +217,7 @@ public/assets/images/animations/ → inscriptible (upload des images d'événeme
 - [ ] Connexion admin OK, les mots de passe de démo ne sont **pas** seedés en production
       (ne pas lancer `db:seed --class=DemoSeeder`)
 
-## 12. Procédure de mise à jour
+## 13. Procédure de mise à jour
 
 1. Fusionner sur `main`, faire tourner les tests (Docker).
 2. `composer install --no-dev --optimize-autoloader` + `npm run build` en local.

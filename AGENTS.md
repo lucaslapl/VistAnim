@@ -101,11 +101,13 @@ app/
 │   │   ├── AdminRegistrationController.php # gestion des inscriptions
 │   │   ├── AdminUserController.php         # structures/utilisateurs (admin uniquement)
 │   │   └── DraftController.php             # suppression des brouillons
-│   └── Middleware/CheckRole.php            # alias 'role' → abort(403) si rôle absent
+│   ├── Middleware/CheckRole.php            # alias 'role' → abort(403) si rôle absent
+│   └── Requests/                          # FormRequests : inscription publique, événements, structures
 ├── Mail/                                 # 10 Mailables (confirmation, rappels, annulations, suppression d'événement, ticket…)
 ├── Models/                               # AdminLog, Category, Event, EventDraft, Registration, User
 ├── Policies/EventPolicy.php              # manage(User, Event) : admin = tous, organisateur = les siens
 └── Services/
+    ├── RegistrationService.php            # création d'inscription sous verrou (doublon + capacité)
     ├── StripeService.php                 # Toute la logique Stripe passe par ici
     └── MailService.php                   # Centralise l'envoi des Mailables
 

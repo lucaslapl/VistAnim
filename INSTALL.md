@@ -254,6 +254,32 @@ docker compose down              # arrêt (les données MySQL persistent dans le
 docker compose down -v           # arrêt + suppression des données
 ```
 
+### Webhook Stripe en local (test E2E)
+
+Avec la CLI Stripe ([installation](https://stripe.com/docs/stripe-cli)) et une clé `sk_test` dans `.env` :
+
+```bash
+# 1. Écouter et transférer les webhooks vers le conteneur
+stripe listen --api-key sk_test_... --forward-to http://localhost:8080/stripe/webhook
+# Noter le "whsec_..." affiché et le reporter dans STRIPE_WEBHOOK_SECRET du .env.
+
+# 2. Créer une inscription 'pending' sur un événement payant (tinker), puis :
+
+# Session payée -> inscription marquée 'paid'
+stripe trigger checkout.session.completed --api-key sk_test_... \
+    --override checkout_session:metadata.registration_id=<id>
+
+# Session expirée -> inscription marquée 'expired', places libérées
+stripe trigger checkout.session.expired --api-key sk_test_... \
+    --override checkout_session:metadata.registration_id=<id>
+
+# Remboursement complet -> passer par StripeService::refundPayment (tinker) :
+# Stripe émet lui-même le charge.refunded, l'application marque 'refunded'.
+```
+
+Chaque événement est signé par Stripe et traverse la vraie chaîne :
+signature → `StripeWebhookController` → base de données.
+
 ### Détails d'implémentation
 
 - Le cache `bootstrap/cache` est **isolé** dans le conteneur (volume anonyme) :
