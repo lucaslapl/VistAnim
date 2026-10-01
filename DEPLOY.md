@@ -139,6 +139,11 @@ Créer les deux tâches suivantes (fréquence : **toutes les minutes**) :
 >    (épinglé `^8.0` dans composer.json) permet d'activer le toggle
 >    *Queues* du Toolkit. Le worker `default` (notre seule file) est alors
 >    géré par Plesk — inutile de créer la tâche cron 2.
+>    **Prérequis Plesk** (KB officielle) : `open_basedir = none` (PHP Settings),
+>    accès SSH `/bin/bash` (Hosting Settings), permission *Scheduler management*
+>    sur l'abonnement, et surtout le toggle **Scheduled Tasks** du Toolkit activé —
+>    le worker s'exécute via ce mécanisme ; sans lui, les jobs restent dans la
+>    table `jobs` avec `attempts = 0`.
 > 2. **Cron** : la tâche 2 ci-dessus, sans dépendre du Toolkit.
 >
 > Dans les deux cas, la tâche 1 (scheduler) reste **obligatoire** : le worker
