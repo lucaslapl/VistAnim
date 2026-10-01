@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\AdminCancellationNotification;
 use App\Mail\AdminNotification;
 use App\Mail\CancellationConfirmation;
+use App\Mail\EventDeletionNotification;
 use App\Mail\ModificationConfirmation;
 use App\Mail\OrganizerReminder;
 use App\Mail\ParticipantReminder;
@@ -61,5 +62,21 @@ class MailService
     public static function sendOrganizerReminder(Event $event, Collection $registrations): void
     {
         Mail::to($event->organizer->email)->send(new OrganizerReminder($event, $registrations));
+    }
+
+    /**
+     * Notification de suppression d'un événement : ne transmet que des
+     * scalaires au Mailable, jamais les modèles (l'événement n'existera
+     * plus lorsque la queue traitera l'envoi).
+     */
+    public static function sendEventDeletionNotification(Registration $registration, Event $event, bool $refunded = false): void
+    {
+        Mail::to($registration->email)->send(new EventDeletionNotification(
+            firstname: $registration->firstname,
+            eventTitle: $event->title,
+            eventDate: $event->event_date->format('d/m/Y à H\hi'),
+            eventLocation: $event->location,
+            refunded: $refunded,
+        ));
     }
 }

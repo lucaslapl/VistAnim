@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    // Cache d'instance, hors $attributes (non persisté en BDD).
+    protected ?int $reservedPlacesCache = null;
 
     protected $fillable = [
         'title', 'description', 'event_date', 'location', 'rdv_point',
@@ -60,17 +64,26 @@ class Event extends Model
 
     public function getReservedPlacesAttribute(): int
     {
-        return $this->registrations()
-            ->where(function ($q) {
-                $q->whereNull('payment_status')
-                  ->orWhereIn('payment_status', ['pending', 'paid']);
-            })
-            ->sum('nb_participants');
+        // Mis en cache par instance : les vues qui appellent plusieurs fois
+        // reserved_places / remaining_places ne déclenchent plus de N+1.
+        if ($this->reservedPlacesCache === null) {
+            $this->reservedPlacesCache = (int) $this->registrations()
+                ->where(function ($q) {
+                    $q->whereNull('payment_status')
+                        ->orWhereIn('payment_status', ['pending', 'paid']);
+                })
+                ->sum('nb_participants');
+        }
+
+        return $this->reservedPlacesCache;
     }
 
     public function getRemainingPlacesAttribute(): ?int
     {
-        if ($this->max_participants === null) return null;
+        if ($this->max_participants === null) {
+            return null;
+        }
+
         return $this->max_participants - $this->reserved_places;
     }
 }

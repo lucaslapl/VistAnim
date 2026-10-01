@@ -6,9 +6,12 @@ use App\Models\AdminLog;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventDraft;
+use App\Services\MailService;
+use App\Services\StripeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminEventController extends Controller
 {
@@ -188,11 +191,35 @@ class AdminEventController extends Controller
 
     public function supprimer(Request $request, int $id)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::with('registrations')->findOrFail($id);
 
         $this->authorize('manage', $event);
 
         $title = $event->title;
+
+        // Remboursement des participants ayant payé (avant la suppression).
+        $refundedIds = [];
+        foreach ($event->registrations as $registration) {
+            if ($registration->payment_status === 'paid' && $registration->payment_intent_id) {
+                try {
+                    StripeService::refundPayment($registration->payment_intent_id);
+                    $refundedIds[] = $registration->id;
+                } catch (\Exception $e) {
+                    Log::error('Erreur remboursement suppression événement: '.$e->getMessage());
+                }
+            }
+        }
+
+        // Notification de chaque participant avant la suppression :
+        // le Mailable ne sérialise que des scalaires, l'envoi en file
+        // d'attente reste valable une fois l'événement supprimé.
+        foreach ($event->registrations as $registration) {
+            MailService::sendEventDeletionNotification(
+                $registration,
+                $event,
+                in_array($registration->id, $refundedIds),
+            );
+        }
 
         DB::transaction(function () use ($event) {
             if ($event->image) {
@@ -206,12 +233,13 @@ class AdminEventController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Suppression événement',
-            'details' => 'Suppression de l\'événement #'.$id.' : '.$title,
+            'details' => 'Suppression de l\'événement #'.$id.' : '.$title
+                .', '.count($event->registrations).' participant(s) notifié(s)',
             'ip_address' => request()->ip(),
         ]);
 
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Événement supprimé avec succès.');
+            ->with('success', 'Événement supprimé avec succès. Les participants inscrits ont été notifiés.');
     }
 
     public function dupliquer(int $id)
