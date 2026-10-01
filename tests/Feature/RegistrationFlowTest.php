@@ -127,6 +127,22 @@ class RegistrationFlowTest extends TestCase
         $this->assertDatabaseMissing('registrations', ['event_id' => $event->id]);
     }
 
+    public function test_cannot_register_for_past_event(): void
+    {
+        // Régression P1 : pas d'inscription à un événement passé, même en
+        // connaissant l'URL directe.
+        $event = Event::factory()->create(['event_date' => now()->subDays(2)]);
+
+        $this->get(route('inscription.form', $event->id))
+            ->assertRedirect(route('agenda'));
+
+        $this->withSession($this->captchaSession)
+            ->post(route('inscription.traiter', $event->id), $this->payload())
+            ->assertRedirect(route('agenda'));
+
+        $this->assertDatabaseMissing('registrations', ['event_id' => $event->id]);
+    }
+
     public function test_ip_rate_limited_after_three_registrations(): void
     {
         $event = Event::factory()->unlimited()->create();

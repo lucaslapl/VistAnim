@@ -102,6 +102,7 @@ app/
 │   └── Middleware/CheckRole.php            # alias 'role' → abort(403) si rôle absent
 ├── Mail/                                 # 9 Mailables (confirmation, rappels, annulations, ticket…)
 ├── Models/                               # AdminLog, Category, Event, EventDraft, Registration, User
+├── Policies/EventPolicy.php              # manage(User, Event) : admin = tous, organisateur = les siens
 └── Services/
     ├── StripeService.php                 # Toute la logique Stripe passe par ici
     └── MailService.php                   # Centralise l'envoi des Mailables
@@ -136,6 +137,11 @@ routes/
 ### Authentification et rôles
 - Auth **custom** (`AuthController`), pas Breeze (Breeze n'est présent qu'en dev pour scaffolding initial).
 - Contrôle d'accès via middleware `role:` (`CheckRole`) : `role:admin,organisateur` sur le groupe admin, `role:admin` imbriqué pour les structures. Les routes de modification/suppression utilisent des **POST** (pas de DELETE).
+- Autorisation par ressource : **`$this->authorize('manage', $event)`** (Gate → `EventPolicy`),
+  jamais de `abort(403)` manuel dans un contrôleur. Toute nouvelle ressource protégée obtient
+  sa Policy.
+- Une inscription doit appartenir à l'événement de l'URL (`Registration::where('event_id', ...)`),
+  sinon 404 — empêche la manipulation d'inscriptions étrangères par URL croisée.
 
 ### Stripe
 - Toute logique Stripe doit passer par `StripeService`.
@@ -216,3 +222,5 @@ Outre la configuration Laravel standard :
   SQLite + MySQL, SoftDeletes sur `Registration`, référence à DEPLOY.md.
 - 2026-10-01 : règle Git — les agents rédigent les messages de commit, seul l'utilisateur pousse.
 - 2026-10-01 : adoption des Conventional Commits 1.0.0 (types, scope, breaking change, pieds).
+- 2026-10-01 : P1 sécurité — EventPolicy (`authorize('manage')`), token de ticket non divulgué,
+  inscription bloquée aux événements passés, capacité/durcissement de update, suppression de getClientIp.

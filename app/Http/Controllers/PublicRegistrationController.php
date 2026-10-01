@@ -7,7 +7,6 @@ use App\Models\Registration;
 use App\Services\MailService;
 use App\Services\StripeService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -20,12 +19,16 @@ class PublicRegistrationController extends Controller
     {
         $event = Event::with('organizer', 'categories')->findOrFail($id);
 
+        if ($event->event_date->isPast()) {
+            return redirect()->route('agenda')->with('error', 'Cet événement n\'est plus disponible.');
+        }
+
         if ($event->remaining_places !== null && $event->remaining_places <= 0) {
             return redirect()->route('agenda')->with('error', 'Cet événement est complet.');
         }
 
         // Génération CAPTCHA si absent
-        if (!session()->has('captcha_result')) {
+        if (! session()->has('captcha_result')) {
             $this->generateCaptcha();
         }
 
@@ -34,11 +37,15 @@ class PublicRegistrationController extends Controller
 
     public function traiterInscription(Request $request, int $id)
     {
-        if (!$request->isMethod('post')) {
+        if (! $request->isMethod('post')) {
             abort(405);
         }
 
         $event = Event::findOrFail($id);
+
+        if ($event->event_date->isPast()) {
+            return redirect()->route('agenda')->with('error', 'Cet événement n\'est plus disponible.');
+        }
 
         // Validation
         $request->validate([
@@ -58,16 +65,18 @@ class PublicRegistrationController extends Controller
         // CAPTCHA
         if ((int) $request->input('captcha') !== session('captcha_result')) {
             $this->generateCaptcha();
+
             return back()->withInput()->withErrors(['captcha' => 'Captcha incorrect.']);
         }
         session()->forget(['captcha_result', 'captcha_num1', 'captcha_num2']);
 
         // IP limiting
-        $ipKey = 'inscription_ip:' . $id . ':' . $request->ip();
+        $ipKey = 'inscription_ip:'.$id.':'.$request->ip();
         if (RateLimiter::tooManyAttempts($ipKey, 3)) {
             $seconds = RateLimiter::availableIn($ipKey);
+
             return back()->withErrors([
-                'email' => 'Trop d\'inscriptions depuis cette IP. Réessayez dans ' . ceil($seconds / 60) . ' minutes.',
+                'email' => 'Trop d\'inscriptions depuis cette IP. Réessayez dans '.ceil($seconds / 60).' minutes.',
             ])->withInput();
         }
 
@@ -134,7 +143,7 @@ class PublicRegistrationController extends Controller
 
     public function afficherRecuperationTicket(Request $request)
     {
-        if (!session()->has('captcha_result')) {
+        if (! session()->has('captcha_result')) {
             $this->generateCaptcha();
         }
 
@@ -145,25 +154,30 @@ class PublicRegistrationController extends Controller
     {
         if ((int) $request->input('captcha') !== session('captcha_result')) {
             $this->generateCaptcha();
+
             return back()->withErrors(['captcha' => 'Captcha incorrect.'])->withInput();
         }
 
         session()->forget(['captcha_result', 'captcha_num1', 'captcha_num2']);
 
-        $eventId = $request->input('event_id');
-        $email = $request->input('email');
+        $validated = $request->validate([
+            'event_id' => 'required|integer|exists:events,id',
+            'email' => 'required|email',
+        ]);
 
-        $registration = Registration::where('event_id', $eventId)
-            ->where('email', $email)
+        $registration = Registration::where('event_id', $validated['event_id'])
+            ->where('email', $validated['email'])
             ->first();
 
         if ($registration) {
             MailService::sendTicketRecovery($registration, $registration->event);
         }
 
-        return redirect()->route('reservation.gerer', [
-            'token' => $registration?->token ?? 'invalide',
-        ])->with('success', 'Si l\'email correspond à une inscription, vous allez recevoir un message.');
+        // Le token n'est jamais divulgué dans la redirection : seul l'email
+        // de récupération le contient. Empêche l'accès à la réservation
+        // par simple connaissance de l'email du participant.
+        return redirect()->route('reservation.gerer', ['token' => 'invalide'])
+            ->with('success', 'Si l\'email correspond à une inscription, vous allez recevoir un message.');
     }
 
     public function gererReservation(Request $request, string $token)
@@ -172,7 +186,7 @@ class PublicRegistrationController extends Controller
             ->with('event.organizer')
             ->first();
 
-        if (!$registration) {
+        if (! $registration) {
             return redirect()->route('accueil');
         }
 
@@ -203,7 +217,7 @@ class PublicRegistrationController extends Controller
                     StripeService::refundPayment($registration->payment_intent_id);
                     $refunded = true;
                 } catch (\Exception $e) {
-                    Log::error('Erreur remboursement annulation: ' . $e->getMessage());
+                    Log::error('Erreur remboursement annulation: '.$e->getMessage());
                 }
             }
 
@@ -222,7 +236,7 @@ class PublicRegistrationController extends Controller
             $newNb = $request->integer('nb_participants');
             $diff = $newNb - $oldNb;
 
-            return DB::transaction(function () use ($request, $registration, $event, $oldNb, $newNb, $diff) {
+            return DB::transaction(function () use ($registration, $event, $oldNb, $newNb, $diff) {
                 Event::where('id', $event->id)->lockForUpdate()->first();
 
                 if ($event->max_participants !== null) {
@@ -263,7 +277,7 @@ class PublicRegistrationController extends Controller
                     );
                     if ($refundAmount > 0) {
                         StripeService::refundPayment($registration->payment_intent_id, $refundAmount);
-                        $refundedAmount = number_format($refundAmount / 100, 2, ',', ' ') . ' €';
+                        $refundedAmount = number_format($refundAmount / 100, 2, ',', ' ').' €';
                         $refundInfo = "Remboursement de {$refundedAmount} initié (sous 5 à 10 jours ouvrés).";
                     }
                 }
@@ -294,22 +308,16 @@ class PublicRegistrationController extends Controller
                     'nb_participants' => $newNb,
                     'payment_status' => 'paid',
                 ]);
+
                 return redirect()->route('reservation.gerer', ['token' => $registration->token])
                     ->with('success', 'Réservation mise à jour avec les places supplémentaires.');
             }
         } catch (\Exception $e) {
-            Log::error('Erreur retour Stripe modification: ' . $e->getMessage());
+            Log::error('Erreur retour Stripe modification: '.$e->getMessage());
         }
 
         return redirect()->route('reservation.gerer', ['token' => $registration->token])
             ->with('error', 'Erreur lors du paiement supplémentaire.');
-    }
-
-    public function getClientIp(Request $request): string
-    {
-        return $request->header('HTTP_CLIENT_IP')
-            ?? $request->header('HTTP_X_FORWARDED_FOR')
-            ?? $request->ip();
     }
 
     private function generateCaptcha(): void

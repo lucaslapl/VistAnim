@@ -19,9 +19,7 @@ class AdminRegistrationController extends Controller
     {
         $event = Event::findOrFail($eventId);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         if ($request->query('export') === 'csv') {
             return $this->exportCsv($event);
@@ -40,11 +38,9 @@ class AdminRegistrationController extends Controller
     public function modifier(int $eventId, int $registrationId)
     {
         $event = Event::findOrFail($eventId);
-        $registration = Registration::findOrFail($registrationId);
+        $registration = Registration::where('event_id', $event->id)->findOrFail($registrationId);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         return view('admin.modifier-inscrit', compact('event', 'registration'));
     }
@@ -52,11 +48,9 @@ class AdminRegistrationController extends Controller
     public function update(Request $request, int $eventId, int $registrationId)
     {
         $event = Event::findOrFail($eventId);
-        $registration = Registration::findOrFail($registrationId);
+        $registration = Registration::where('event_id', $event->id)->findOrFail($registrationId);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         if ($request->query('action') === 'supprimer') {
             return $this->delete($registration, $event);
@@ -93,7 +87,7 @@ class AdminRegistrationController extends Controller
                         $registration->payment_intent_id,
                         $refundAmount
                     );
-                    $refundedAmount = number_format($refundAmount / 100, 2, ',', ' ') . ' €';
+                    $refundedAmount = number_format($refundAmount / 100, 2, ',', ' ').' €';
                     $refundInfo = "Remboursement de {$refundedAmount} initié (sous 5 à 10 jours ouvrés).";
                 }
             }
@@ -121,7 +115,7 @@ class AdminRegistrationController extends Controller
                 StripeService::refundPayment($registration->payment_intent_id);
                 $refunded = true;
             } catch (\Exception $e) {
-                Log::error('Erreur remboursement suppression inscription: ' . $e->getMessage());
+                Log::error('Erreur remboursement suppression inscription: '.$e->getMessage());
             }
         }
 
@@ -152,15 +146,15 @@ class AdminRegistrationController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="inscriptions-' . $event->id . '.csv"',
+            'Content-Disposition' => 'attachment; filename="inscriptions-'.$event->id.'.csv"',
         ];
 
         $callback = function () use ($event, $registrations) {
             $output = fopen('php://output', 'w');
-            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
 
-            fputcsv($output, ['', 'Inscriptions pour : ' . $event->title, '']);
-            fputcsv($output, ['', 'Date : ' . $event->event_date->format('d/m/Y'), '']);
+            fputcsv($output, ['', 'Inscriptions pour : '.$event->title, '']);
+            fputcsv($output, ['', 'Date : '.$event->event_date->format('d/m/Y'), '']);
             fputcsv($output, ['', '', '']);
             fputcsv($output, ['Prénom', 'Nom', 'Email', 'Téléphone', 'Participants', 'Statut paiement', 'Inscrit le']);
 

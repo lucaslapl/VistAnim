@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\CancellationConfirmation;
+use App\Mail\TicketRecovery;
 use App\Models\Event;
 use App\Models\Registration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +13,12 @@ use Tests\TestCase;
 class ReservationManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    private array $captchaSession = [
+        'captcha_result' => 7,
+        'captcha_num1' => 3,
+        'captcha_num2' => 4,
+    ];
 
     public function test_invalid_token_redirects_home(): void
     {
@@ -71,6 +78,57 @@ class ReservationManagementTest extends TestCase
             ->whereNull('deleted_at')
             ->count();
         $this->assertSame(1, $active);
+    }
+
+    public function test_ticket_recovery_never_leaks_registration_token(): void
+    {
+        // Régression P1 : connaître l'email d'un participant ne doit pas
+        // donner accès à sa page de gestion. Le token ne doit jamais
+        // apparaître dans la redirection.
+        Mail::fake();
+        $event = Event::factory()->create();
+        $registration = Registration::factory()->for($event)->create();
+
+        $response = $this->withSession($this->captchaSession)
+            ->post('/retrouver-ticket', [
+                'event_id' => $event->id,
+                'email' => $registration->email,
+                'captcha' => '7',
+            ]);
+
+        $response->assertRedirect(route('reservation.gerer', ['token' => 'invalide']));
+        $this->assertStringNotContainsString($registration->token, $response->getContent());
+
+        // Le mail part bien : c'est lui qui transporte le lien sécurisé.
+        Mail::assertQueued(TicketRecovery::class, fn ($mail) => $mail->hasTo($registration->email));
+    }
+
+    public function test_ticket_recovery_with_unknown_email_gives_no_hint(): void
+    {
+        Mail::fake();
+        $event = Event::factory()->create();
+
+        $response = $this->withSession($this->captchaSession)
+            ->post('/retrouver-ticket', [
+                'event_id' => $event->id,
+                'email' => 'inconnu@example.com',
+                'captcha' => '7',
+            ]);
+
+        // Comportement identique à un email connu : pas d'énumération.
+        $response->assertRedirect(route('reservation.gerer', ['token' => 'invalide']));
+        Mail::assertNothingQueued();
+    }
+
+    public function test_ticket_recovery_validates_its_inputs(): void
+    {
+        $this->withSession($this->captchaSession)
+            ->post('/retrouver-ticket', [
+                'event_id' => 'abc',
+                'email' => 'pas-un-email',
+                'captcha' => '7',
+            ])
+            ->assertSessionHasErrors(['event_id', 'email']);
     }
 
     public function test_update_nb_participants_on_free_event(): void

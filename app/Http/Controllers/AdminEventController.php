@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminLog;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventDraft;
-use App\Models\AdminLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class AdminEventController extends Controller
 {
@@ -90,7 +89,7 @@ class AdminEventController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Création événement',
-            'details' => 'Création de ' . count($createdEvents) . ' événement(s) : ' . $request->input('title'),
+            'details' => 'Création de '.count($createdEvents).' événement(s) : '.$request->input('title'),
             'ip_address' => request()->ip(),
         ]);
 
@@ -101,16 +100,14 @@ class AdminEventController extends Controller
         }
 
         return redirect()->route('admin.dashboard')
-            ->with('success', count($createdEvents) . ' événement(s) créé(s) avec succès.');
+            ->with('success', count($createdEvents).' événement(s) créé(s) avec succès.');
     }
 
     public function modifier(int $id)
     {
         $event = Event::with('categories')->findOrFail($id);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         $categories = Category::orderBy('name')->get();
 
@@ -121,14 +118,12 @@ class AdminEventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_date' => 'required|date',
+            'event_date' => 'required|date|after_or_equal:today',
             'location' => 'nullable|string|max:200',
             'rdv_point' => 'nullable|string|max:200',
             'event_duration' => 'nullable|string|max:100',
@@ -144,6 +139,13 @@ class AdminEventController extends Controller
             'remove_image' => 'boolean',
         ]);
 
+        // La capacité ne peut pas descendre sous les places déjà réservées.
+        if ($request->filled('max_participants') && $request->integer('max_participants') < $event->reserved_places) {
+            return back()->withErrors([
+                'max_participants' => 'La capacité ne peut pas être inférieure aux places déjà réservées ('.$event->reserved_places.').',
+            ])->withInput();
+        }
+
         $data = $request->only([
             'title', 'description', 'event_date', 'location', 'rdv_point',
             'event_duration', 'audience_type', 'max_participants', 'min_participants',
@@ -155,14 +157,14 @@ class AdminEventController extends Controller
         // Gestion image
         if ($request->boolean('remove_image')) {
             if ($event->image) {
-                @unlink(public_path('assets/images/animations/' . $event->image));
+                @unlink(public_path('assets/images/animations/'.$event->image));
             }
             $data['image'] = null;
         }
 
         if ($request->hasFile('image')) {
             if ($event->image) {
-                @unlink(public_path('assets/images/animations/' . $event->image));
+                @unlink(public_path('assets/images/animations/'.$event->image));
             }
             $data['image'] = $this->uploadImage($request->file('image'));
         }
@@ -176,7 +178,7 @@ class AdminEventController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Modification événement',
-            'details' => 'Modification de l\'événement #' . $id . ' : ' . $request->input('title'),
+            'details' => 'Modification de l\'événement #'.$id.' : '.$request->input('title'),
             'ip_address' => request()->ip(),
         ]);
 
@@ -188,15 +190,13 @@ class AdminEventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         $title = $event->title;
 
         DB::transaction(function () use ($event) {
             if ($event->image) {
-                @unlink(public_path('assets/images/animations/' . $event->image));
+                @unlink(public_path('assets/images/animations/'.$event->image));
             }
             $event->categories()->detach();
             $event->registrations()->delete();
@@ -206,7 +206,7 @@ class AdminEventController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Suppression événement',
-            'details' => 'Suppression de l\'événement #' . $id . ' : ' . $title,
+            'details' => 'Suppression de l\'événement #'.$id.' : '.$title,
             'ip_address' => request()->ip(),
         ]);
 
@@ -218,9 +218,7 @@ class AdminEventController extends Controller
     {
         $event = Event::with('categories')->findOrFail($id);
 
-        if (!Auth::user()->isAdmin() && $event->organizer_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('manage', $event);
 
         $newEvent = DB::transaction(function () use ($event) {
             $copy = Event::create([
@@ -247,7 +245,7 @@ class AdminEventController extends Controller
         AdminLog::create([
             'user_id' => Auth::id(),
             'action' => 'Duplication événement',
-            'details' => 'Duplication de l\'événement #' . $id . ' vers #' . $newEvent->id,
+            'details' => 'Duplication de l\'événement #'.$id.' vers #'.$newEvent->id,
             'ip_address' => request()->ip(),
         ]);
 
@@ -263,7 +261,7 @@ class AdminEventController extends Controller
             ['id' => $request->integer('draft_id', 0) ?: null],
             [
                 'organizer_id' => Auth::id(),
-                'draft_label' => $request->input('draft_label', 'Brouillon du ' . now()->format('d/m/Y H:i')),
+                'draft_label' => $request->input('draft_label', 'Brouillon du '.now()->format('d/m/Y H:i')),
                 'draft_data' => $data,
             ]
         );
@@ -301,8 +299,9 @@ class AdminEventController extends Controller
     private function uploadImage($file): string
     {
         $extension = $file->getClientOriginalExtension();
-        $filename = 'anim_' . bin2hex(random_bytes(16)) . '.' . $extension;
+        $filename = 'anim_'.bin2hex(random_bytes(16)).'.'.$extension;
         $file->move(public_path('assets/images/animations'), $filename);
+
         return $filename;
     }
 }
