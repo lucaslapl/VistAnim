@@ -46,6 +46,6 @@ class AdminDashboardController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        return view('admin.dashboard', compact('events', 'ownEvents', 'otherEvents', 'stats', 'drafts'));
+        return view('admin.dashboard', compact('ownEvents', 'otherEvents', 'stats', 'drafts'));
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PublicRegistrationController extends Controller
 {
@@ -91,9 +92,9 @@ class PublicRegistrationController extends Controller
             $requestedPlaces = $request->integer('nb_participants');
 
             if ($event->max_participants !== null && ($reserved + $requestedPlaces) > $event->max_participants) {
-                DB::rollBack();
-                return back()->withErrors(['nb_participants' => 'Il n\'y a plus assez de places disponibles.'])
-                    ->withInput();
+                throw ValidationException::withMessages([
+                    'nb_participants' => 'Il n\'y a plus assez de places disponibles.',
+                ]);
             }
 
             $registration = Registration::create([
@@ -109,11 +110,6 @@ class PublicRegistrationController extends Controller
                 'payment_status' => $event->is_paid ? 'pending' : null,
             ]);
         });
-
-        if (!$registration) {
-            return back()->withErrors(['error' => 'Erreur lors de l\'inscription. Veuillez réessayer.'])
-                ->withInput();
-        }
 
         RateLimiter::hit($ipKey, 3600);
 
@@ -242,7 +238,6 @@ class PublicRegistrationController extends Controller
                         'token' => $registration->token,
                         'add' => '1',
                         'session_id' => '{CHECKOUT_SESSION_ID}',
-                        'new_nb' => $newNb,
                     ]);
                     $cancelUrl = route('reservation.gerer', [
                         'token' => $registration->token,
@@ -253,7 +248,8 @@ class PublicRegistrationController extends Controller
                         $event,
                         $registration,
                         $successUrl,
-                        $cancelUrl
+                        $cancelUrl,
+                        ['new_nb' => (string) $newNb],
                     );
 
                     return redirect()->away($session->url);
@@ -286,11 +282,14 @@ class PublicRegistrationController extends Controller
 
     private function handleStripeModificationReturn(Request $request, Registration $registration, Event $event)
     {
-        $newNb = $request->integer('new_nb', $registration->nb_participants);
-
         try {
             $session = StripeService::getSession($request->query('session_id'));
-            if ($session->payment_status === 'paid') {
+
+            // Le nouveau nombre de places vient des métadonnées Stripe (créées
+            // côté serveur), jamais de l'URL : empêche la falsification.
+            $newNb = (int) ($session->metadata->new_nb ?? 0);
+
+            if ($session->payment_status === 'paid' && $newNb > 0) {
                 $registration->update([
                     'nb_participants' => $newNb,
                     'payment_status' => 'paid',

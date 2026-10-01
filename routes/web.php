@@ -73,5 +73,7 @@ Route::middleware(['auth', 'role:admin,organisateur'])->prefix('admin')->name('a
 });
 
 // Webhook Stripe (sans CSRF — middleware ajouté dans bootstrap/app.php)
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('stripe.webhook');
 

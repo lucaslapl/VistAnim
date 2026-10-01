@@ -21,7 +21,7 @@ class StripeService
         return self::$client;
     }
 
-    public static function createCheckoutSession(Event $event, Registration $reg, string $successUrl, string $cancelUrl): Session
+    public static function createCheckoutSession(Event $event, Registration $reg, string $successUrl, string $cancelUrl, array $extraMetadata = []): Session
     {
         $unitAmount = (int)(round((float)$event->price_amount, 2) * 100);
         $quantity = (int)$reg->nb_participants;
@@ -32,11 +32,11 @@ class StripeService
             'cancel_url' => $cancelUrl,
             'customer_email' => $reg->email,
             'client_reference_id' => (string)$reg->id,
-            'metadata' => [
+            'metadata' => array_merge([
                 'registration_id' => (string)$reg->id,
                 'event_id' => (string)$event->id,
                 'token' => $reg->token,
-            ],
+            ], $extraMetadata),
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'eur',

@@ -213,7 +213,53 @@ routes/
 
 ---
 
-## 8. Sécurité
+## 9. Environnement Docker (développement / tests)
+
+Une stack Docker complète (PHP 8.4 FPM + Nginx + MySQL 8) permet de développer
+et de tester dans un environnement Linux identique à la cible de production.
+
+### Démarrage
+
+```bash
+docker compose up -d          # build au premier lancement
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan db:seed --class=DemoSeeder  # optionnel
+```
+
+Le site est alors accessible sur `http://localhost:8080`.
+
+> Les variables d'environnement du `docker-compose.yml` (BDD, `MAIL_MAILER=log`)
+> surchargent le `.env` local, qui reste utilisé pour `APP_KEY` et les clés Stripe.
+
+### Tests
+
+```bash
+# Suite rapide (SQLite en mémoire)
+docker compose exec app php artisan test
+
+# Suite réaliste (MySQL 8 — verrous pessimistes, FK, cascade)
+docker compose exec app vendor/bin/phpunit -c phpunit.mysql.xml
+```
+
+### Commandes utiles
+
+```bash
+docker compose logs -f app      # logs applicatifs
+docker compose exec app bash    # shell dans le conteneur
+docker compose down              # arrêt (les données MySQL persistent dans le volume db_data)
+docker compose down -v           # arrêt + suppression des données
+```
+
+### Détails d'implémentation
+
+- Le cache `bootstrap/cache` est **isolé** dans le conteneur (volume anonyme) :
+  les caches de routes/config générés sur l'hôte Windows contiennent des chemins
+  absolus invalides sous Linux.
+- L'image inclut Composer et Node.js (utile pour `npm run build` dans le conteneur).
+
+---
+
+## 10. Sécurité
 
 - **HTTPS obligatoire** en production
 - **CSRF tokens** sur tous les formulaires
