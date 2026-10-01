@@ -23,39 +23,62 @@
 | Domaine | Technologie |
 |---|---|
 | Framework | Laravel 13 (structure Laravel 11+ : middleware et exceptions dans `bootstrap/app.php`, pas de `Kernel.php`) |
-| PHP | 8.3+ |
-| Base de données | MySQL / MariaDB (driver `database` pour queue, cache, sessions) |
+| PHP | 8.4 (le vendor exige ≥ 8.4.1 ; image Docker et production Plesk sur 8.4) |
+| Base de données | MySQL 8 (driver `database` pour queue, cache, sessions) |
 | Paiement | Stripe (`stripe/stripe-php` v20) |
 | Frontend | Vite 8, Tailwind CSS, Alpine.js, Sass |
 | Emails | Mailables asynchrones (`ShouldQueue`) — nécessite un worker de queue |
-| Qualité | Pint (style), PHPUnit (tests) |
+| Qualité | Pint (style), PHPUnit 12 (tests feature : inscription, paiement/webhook, rôles, rappels) |
+| Environnement de dev | **Docker uniquement** (voir § 3) — WAMP abandonné |
 
 ---
 
-## 3. Commandes de référence
+## 3. Environnement et commandes de référence
+
+### Règle environnement (importante)
+
+**L'environnement de développement et de test est Docker exclusivement** (`docker compose up -d`).
+WAMP est abandonné : ne pas utiliser le PHP de l'hôte (`C:\wamp64\bin\php\...`) pour
+artisan, composer, npm ou les tests. Toute commande PHP/Node se lance dans le conteneur `app` :
 
 ```bash
-# Installation / mise à jour
-composer install
-php artisan migrate --seed        # DemoSeeder = données de démonstration
-php artisan storage:link
-npm install && npm run build      # build production des assets
-npm run dev                       # Vite en mode dev
-
-# Développement (serveur + queue + logs + Vite en parallèle)
-composer dev
-
-# Tests
-composer test                     # php artisan config:clear && php artisan test
-
-# Style
-./vendor/bin/pint                # formatage PHP
-
-# Rappels J-1 (planifié toutes les 30 min via routes/console.php)
-php artisan reminders:send
+docker compose exec app <commande>
 ```
 
-**Environnement local : WAMP sous Windows** (`C:\wamp64`). Chemins Windows en ligne de commande ; les scripts Composer (`composer dev`) utilisent `concurrently` et fonctionnent depuis la racine du projet.
+Le site est servi sur `http://localhost:8080` (nginx → php-fpm → MySQL 8).
+Le `bootstrap/cache` du conteneur est **isolé** de l'hôte (volume anonyme) :
+les caches de routes/config générés hors conteneur contiennent des chemins
+absolus invalides sous Linux — ne jamais partager ce répertoire entre environnements.
+
+### Commandes usuelles (dans le conteneur)
+
+```bash
+docker compose up -d                     # démarrage de la stack
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan db:seed --class=DemoSeeder   # données de démo
+
+# Tests — LES DEUX suites doivent passer avant toute fusion :
+docker compose exec app php artisan test                          # rapide (SQLite :memory:)
+docker compose exec app vendor/bin/phpunit -c phpunit.mysql.xml  # réaliste (MySQL 8 : verrous, FK, cascade)
+
+# Style
+docker compose exec app vendor/bin/pint
+
+# Assets front (Node inclus dans l'image)
+docker compose exec app npm install
+docker compose exec app npm run build     # build production des assets
+
+# Queue / logs (développement)
+docker compose exec app php artisan queue:work --stop-when-empty
+docker compose logs -f app
+```
+
+Autres points :
+- `composer dev` (serveur + queue + logs + Vite en parallèle) n'est utilisable que si l'on
+  travaille hors Docker ; en Docker, lancer plutôt les commandes ci-dessus.
+- `php artisan reminders:send` (rappels J-1) est planifié via `routes/console.php`
+  (toutes les 30 min, `withoutOverlapping`).
+- Fins de ligne **LF** obligatoires (`.gitattributes` : `* text=auto eol=lf`).
 
 ---
 
@@ -101,7 +124,7 @@ routes/
 ### Modèles et relations clés
 
 - `Event` — `belongsTo(User, organizer_id)`, `hasMany(Registration)`, `belongsToMany(Category, event_categories)` ; scopes `future`/`past` ; champs notables : `is_paid`, `price_amount`, `reminder_sent`
-- `Registration` — inscription d'un participant, avec **token unique** servant de lien magique (gestion/annulation de réservation)
+- `Registration` — inscription d'un participant, avec **token unique** servant de lien magique (gestion/annulation de réservation). **SoftDeletes** : une annulation conserve l'enregistrement (et l'historique de paiement `payment_intent_id`), les places sont libérées automatiquement via le scope global. Statuts `payment_status` : `pending` → `paid` | `expired` (session Stripe expirée, places libérées) | `refunded`.
 - `EventDraft` — système de brouillons pour les événements en préparation
 - `AdminLog` — journal d'audit des actions d'administration
 - `User` — champ `role` (`admin` | `organisateur`)
@@ -125,6 +148,28 @@ routes/
 - Tailwind + Alpine.js (pas de Vue/React côté app). Assets compilés avec Vite (`npm run build`).
 - Google Analytics : activé via `GOOGLE_ANALYTICS_ID` dans `.env`.
 
+### Git
+- **Conventions de commit : Conventional Commits 1.0.0**
+  (référence : https://www.conventionalcommits.org —
+  cheat-sheet : https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13).
+- Format de la première ligne : `<type>[<scope> facultatif]: <description>`
+  - Types autorisés : `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+  - Scope facultatif entre parenthèses (ex. `fix(paiement):`) ; pas de majuscule ni de point final.
+  - Description à l'**impératif, en français**, minuscule, ≤ 72 caractères au total.
+  - Breaking change : `!` après le type/scope (`feat!:`) ou pied `BREAKING CHANGE: ...`.
+- Corps et pieds facultatifs : pliés à 72 caractères, expliquant le **pourquoi** du changement.
+  Pieds normalisés : `BREAKING CHANGE`, `Closes #123`, `Refs #45`, `Co-authored-by: ...`.
+- Versionnement implicite (semver) : `feat` → mineure, `fix` → corrective, `BREAKING CHANGE` → majeure.
+- Exemples :
+  - `feat: ajoute la duplication d'événements`
+  - `fix(paiement): empêche la falsification de new_nb via l'URL`
+  - `docs: documente l'environnement Docker exclusif`
+- Les agents d'IA **rédigent les messages de commit** (et peuvent créer les commits locaux)
+  en respectant ces conventions.
+- **Seul l'utilisateur peut pousser** : aucun agent ne doit exécuter `git push`
+  (ni vers `origin` ni vers tout autre remote), même sur demande implicite.
+  Préparer le commit et laisser l'utilisateur pousser.
+
 ### Style de code
 - Pint (convention Laravel). Indentation : **4 espaces**, fins de ligne LF, UTF-8 (voir `.editorconfig`).
 - Français pour le nommage métier (méthodes `creer`, `modifier`, `supprimer`, vues `creer-evenement.blade.php`…). Les classes/namespace restent en anglais standard Laravel.
@@ -132,6 +177,9 @@ routes/
 ### Base de données
 - Migrations dans `database/migrations/`, seeders dans `database/seeders/` (`DemoSeeder` pour la démo).
 - Créer une nouvelle migration plutôt que modifier une migration existante déjà appliquée.
+- Capacité d'un événement : verrou pessimiste (`lockForUpdate`) en transaction — toute
+  modification de la logique de places doit rester dans une transaction et être couverte
+  par `RegistrationFlowTest` / `ReservationManagementTest`.
 
 ### Sécurité
 - `.env` n'est pas versionné. Les secrets Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) et SMTP sont dans `.env`.
@@ -156,10 +204,15 @@ Outre la configuration Laravel standard :
 ## 7. Documentation associée
 
 - `README.md` — présentation générale, stack, démarrage rapide
-- `INSTALL.md` — guide d'installation détaillé (prérequis, extensions PHP, Apache, déploiement)
+- `INSTALL.md` — guide d'installation détaillé (prérequis, extensions PHP, section Docker)
+- `DEPLOY.md` — mise en production sur mutualisé PulseHeberg/Plesk (docroot, crons, Stripe, checklist)
 
 ---
 
 ## 8. Historique des mises à jour de ce fichier
 
 - 2026-10-01 : création initiale du fichier AGENTS.md.
+- 2026-10-01 : passage en environnement Docker exclusif (abandon de WAMP), suites de tests
+  SQLite + MySQL, SoftDeletes sur `Registration`, référence à DEPLOY.md.
+- 2026-10-01 : règle Git — les agents rédigent les messages de commit, seul l'utilisateur pousse.
+- 2026-10-01 : adoption des Conventional Commits 1.0.0 (types, scope, breaking change, pieds).

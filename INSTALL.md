@@ -39,6 +39,10 @@
 
 ## 2. Installation
 
+> **Méthode recommandée : Docker** (voir section 9) — l'environnement de
+> développement de référence du projet. La procédure ci-dessous décrit
+> l'installation manuelle (utile pour la mise en production, voir `DEPLOY.md`).
+
 ```bash
 # 1. Cloner le dépôt
 git clone <url-du-depot> /chemin/vers/site
