@@ -8,13 +8,14 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: relative;
 
-    .tool-name {
-        font-size: 1.4rem;
-        font-weight: bold;
-        position: absolute;
-        top: 15px;
-        left: 20px;
-        color: rgba(255, 255, 255, 0.5);
+        .tool-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: 'Reem Kufi', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.5);
 
         @include mixins.respond-to(md) {
             display: none;
