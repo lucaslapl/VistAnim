@@ -80,21 +80,23 @@ class PublicRegistrationController extends Controller
             ])->withInput();
         }
 
-        // Vérification doublon email
-        $existing = Registration::where('event_id', $id)
-            ->where('email', $request->input('email'))
-            ->exists();
-
-        if ($existing) {
-            return redirect()->route('ticket.recuperer', ['event_id' => $id])
-                ->with('info', 'Vous êtes déjà inscrit à cet événement.');
-        }
-
         $registration = null;
+        $duplicate = false;
 
-        DB::transaction(function () use ($request, $event, $id, &$registration) {
-            // Verrouillage ligne
+        DB::transaction(function () use ($request, $event, $id, &$registration, &$duplicate) {
+            // Verrouillage ligne : sérialise les inscriptions concurrentes
+            // sur le même événement (verrou pessimiste).
             Event::where('id', $id)->lockForUpdate()->first();
+
+            // Vérification doublon email — sous le verrou : une double
+            // soumission concurrente ne peut plus passer deux fois.
+            $duplicate = Registration::where('event_id', $id)
+                ->where('email', $request->input('email'))
+                ->exists();
+
+            if ($duplicate) {
+                return;
+            }
 
             // Vérification places restantes
             $reserved = $event->fresh()->reserved_places;
@@ -119,6 +121,11 @@ class PublicRegistrationController extends Controller
                 'payment_status' => $event->is_paid ? 'pending' : null,
             ]);
         });
+
+        if ($duplicate) {
+            return redirect()->route('ticket.recuperer', ['event_id' => $id])
+                ->with('info', 'Vous êtes déjà inscrit à cet événement.');
+        }
 
         RateLimiter::hit($ipKey, 3600);
 
