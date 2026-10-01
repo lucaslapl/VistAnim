@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: Pint + suites SQLite et MySQL
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: natureanim_testing
+          MYSQL_USER: natureanim
+          MYSQL_PASSWORD: secret
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_mysql, pdo_sqlite, sqlite3, intl, zip, gd, bcmath, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Tests rapides (SQLite :memory:)
+        run: php artisan test
+
+      - name: Tests réalistes (MySQL 8)
+        # Les variables d'environnement prennent le pas sur les <env> de
+        # phpunit.mysql.xml : on pointe la base vers le service CI.
+        run: vendor/bin/phpunit -c phpunit.mysql.xml
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: natureanim_testing
+          DB_USERNAME: natureanim
+          DB_PASSWORD: secret
