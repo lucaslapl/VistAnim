@@ -74,6 +74,8 @@ docker compose logs -f app
 ```
 
 Autres points :
+- **CI GitHub Actions** (`.github/workflows/ci.yml`) : Pint + les deux suites de tests
+  à chaque push sur `main` et sur chaque pull request.
 - `composer dev` (serveur + queue + logs + Vite en parallèle) n'est utilisable que si l'on
   travaille hors Docker ; en Docker, lancer plutôt les commandes ci-dessus.
 - `php artisan reminders:send` (rappels J-1) est planifié via `routes/console.php`
@@ -86,7 +88,7 @@ Autres points :
 
 ```
 app/
-├── Console/Commands/SendReminders.php   # reminders:send (rappels J-1, fenêtre 23h45–24h15)
+├── Console/Commands/SendReminders.php   # reminders:send (récap organisateur 23h45–24h15 + rappels participants < 24 h)
 ├── Http/
 │   ├── Controllers/
 │   │   ├── PublicEventController.php        # accueil, agenda, fiche animation
@@ -100,7 +102,7 @@ app/
 │   │   ├── AdminUserController.php         # structures/utilisateurs (admin uniquement)
 │   │   └── DraftController.php             # suppression des brouillons
 │   └── Middleware/CheckRole.php            # alias 'role' → abort(403) si rôle absent
-├── Mail/                                 # 9 Mailables (confirmation, rappels, annulations, ticket…)
+├── Mail/                                 # 10 Mailables (confirmation, rappels, annulations, suppression d'événement, ticket…)
 ├── Models/                               # AdminLog, Category, Event, EventDraft, Registration, User
 ├── Policies/EventPolicy.php              # manage(User, Event) : admin = tous, organisateur = les siens
 └── Services/
@@ -124,8 +126,8 @@ routes/
 
 ### Modèles et relations clés
 
-- `Event` — `belongsTo(User, organizer_id)`, `hasMany(Registration)`, `belongsToMany(Category, event_categories)` ; scopes `future`/`past` ; champs notables : `is_paid`, `price_amount`, `reminder_sent`
-- `Registration` — inscription d'un participant, avec **token unique** servant de lien magique (gestion/annulation de réservation). **SoftDeletes** : une annulation conserve l'enregistrement (et l'historique de paiement `payment_intent_id`), les places sont libérées automatiquement via le scope global. Statuts `payment_status` : `pending` → `paid` | `expired` (session Stripe expirée, places libérées) | `refunded`.
+- `Event` — `belongsTo(User, organizer_id)`, `hasMany(Registration)`, `belongsToMany(Category, event_categories)` ; scopes `future`/`past` ; champs notables : `is_paid`, `price_amount`, `reminder_sent`. **SoftDeletes** : la suppression notifie les inscrits, les rembourse, puis conserve l'historique.
+- `Registration` — inscription d'un participant, avec **token unique** servant de lien magique (gestion/annulation de réservation). **SoftDeletes** : une annulation conserve l'enregistrement (et l'historique de paiement `payment_intent_id`), les places sont libérées automatiquement via le scope global. Statuts `payment_status` : `pending` → `paid` | `expired` (session Stripe expirée, places libérées) | `refunded`. Le rappel J-1 est suivi par inscription (`reminder_sent`), ce qui couvre les inscriptions tardives.
 - `EventDraft` — système de brouillons pour les événements en préparation
 - `AdminLog` — journal d'audit des actions d'administration
 - `User` — champ `role` (`admin` | `organisateur`)
@@ -149,6 +151,7 @@ routes/
 
 ### Emails
 - Tous les Mailables sont `ShouldQueue` → un worker de queue doit tourner (`composer dev` le lance). L'envoi passe par `MailService`.
+- Un Mailable dont les modèles peuvent disparaître avant le passage de la queue (ex. suppression d'événement) ne doit sérialiser que des **scalaires** (`EventDeletionNotification`).
 
 ### Frontend
 - Tailwind + Alpine.js (pas de Vue/React côté app). Assets compilés avec Vite (`npm run build`).
@@ -224,3 +227,6 @@ Outre la configuration Laravel standard :
 - 2026-10-01 : adoption des Conventional Commits 1.0.0 (types, scope, breaking change, pieds).
 - 2026-10-01 : P1 sécurité — EventPolicy (`authorize('manage')`), token de ticket non divulgué,
   inscription bloquée aux événements passés, capacité/durcissement de update, suppression de getClientIp.
+- 2026-10-01 : P2/P3 — suppression d'événement notifiée et remboursée (SoftDeletes Event),
+  rappels par inscription, doublon sous verrou, retrait de laravel/breeze, mise à jour
+  des dépendances vulnérables (composer audit à 0), CI GitHub Actions, Pint global.
