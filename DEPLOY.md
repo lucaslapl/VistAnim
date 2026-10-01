@@ -74,6 +74,11 @@ Le chemin du binaire PHP peut varier ; `which php` en SSH le confirme.
 
 ## 6. Fichier `.env` de production
 
+> **Piège fréquent** : ne jamais réutiliser le `.env` de développement comme
+> base — il contient typiquement `MAIL_MAILER=log` (les emails sont écrits
+> dans `storage/logs/` sans erreur apparente) et des identifiants locaux.
+> Partir de `.env.example` et remplir les valeurs de production.
+
 Créer `httpdocs/.env` à partir de `.env.example` puis renseigner :
 
 ```ini
